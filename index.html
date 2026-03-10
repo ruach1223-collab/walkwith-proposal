@@ -1,0 +1,2619 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>워크위드 제안서 생성기</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #1e3a2f;
+  --blue: #2d8659;
+  --blue-light: #f0faf5;
+  --blue-mid: #c6f0d8;
+  --gray-50: #f7fafc;
+  --gray-100: #edf2f7;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e0;
+  --gray-500: #718096;
+  --gray-600: #4a5568;
+  --gray-700: #2d3748;
+  --gray-800: #1a202c;
+  --white: #ffffff;
+  --red: #e53e3e;
+  --red-light: #fff5f5;
+  --green: #38a169;
+  --green-light: #f0fff4;
+  --orange: #dd6b20;
+  --orange-light: #fffaf0;
+}
+html { font-size: 15px; }
+body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--gray-100);
+  color: var(--gray-800);
+  line-height: 1.6;
+}
+
+/* ===== Layout ===== */
+.app-header {
+  background: var(--navy);
+  color: var(--white);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.app-header .logo {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.app-header .logo span { color: var(--blue); }
+.app-header .subtitle { font-size: 0.85rem; opacity: 0.8; margin-left: 12px; }
+.header-actions { display: flex; gap: 8px; }
+
+.container {
+  display: flex;
+  gap: 0;
+  min-height: calc(100vh - 56px);
+}
+
+/* ===== Sidebar (Input Form) ===== */
+.sidebar {
+  width: 420px;
+  min-width: 420px;
+  background: var(--white);
+  border-right: 1px solid var(--gray-200);
+  overflow-y: auto;
+  height: calc(100vh - 56px);
+  position: sticky;
+  top: 56px;
+}
+.sidebar-inner { padding: 24px; }
+.form-section {
+  margin-bottom: 24px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.form-section-title {
+  background: var(--gray-50);
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--navy);
+  border-bottom: 1px solid var(--gray-200);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+.form-section-title::after {
+  content: '\25B2';
+  font-size: 0.65rem;
+  transition: transform 0.2s;
+}
+.form-section.collapsed .form-section-title::after {
+  transform: rotate(180deg);
+}
+.form-section.collapsed .form-section-body { display: none; }
+.form-section-body { padding: 16px; }
+.form-group { margin-bottom: 14px; }
+.form-group:last-child { margin-bottom: 0; }
+.form-group label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 4px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(49,130,206,0.1);
+}
+.form-group textarea { resize: vertical; min-height: 60px; }
+.form-row { display: flex; gap: 12px; }
+.form-row .form-group { flex: 1; }
+.calculated {
+  background: var(--blue-light);
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-weight: 700;
+  color: var(--navy);
+  font-size: 1.05rem;
+  text-align: right;
+}
+.calculated small { font-weight: 400; font-size: 0.75rem; color: var(--gray-500); display: block; }
+
+/* Reference rows */
+.ref-list { display: flex; flex-direction: column; gap: 8px; }
+.ref-row { display: flex; gap: 8px; align-items: end; }
+.ref-row input { flex: 1; }
+.ref-row .btn-remove {
+  width: 32px; height: 36px;
+  background: var(--red);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.btn-add-ref {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: var(--gray-100);
+  border: 1px dashed var(--gray-300);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--gray-600);
+  width: 100%;
+}
+.btn-add-ref:hover { background: var(--gray-200); }
+
+/* ===== Buttons ===== */
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.btn-primary { background: var(--blue); color: var(--white); }
+.btn-primary:hover { background: #2b6cb0; }
+.btn-outline { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.4); }
+.btn-outline:hover { background: rgba(255,255,255,0.1); }
+.btn-danger { background: var(--red); color: var(--white); }
+.btn-danger:hover { background: #c53030; }
+
+/* ===== Rate Settings ===== */
+.rate-toggle-btn {
+  font-size: 0.75rem; color: var(--blue); cursor: pointer;
+  border: none; background: none; padding: 0; margin-left: 8px;
+  text-decoration: underline;
+}
+.rate-settings { display: none; margin-top: 8px; }
+.rate-settings.open { display: block; }
+.rate-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 6px 12px; font-size: 0.78rem;
+}
+.rate-item {
+  display: flex; align-items: center; gap: 4px;
+}
+.rate-item span:first-child {
+  min-width: 68px; color: var(--gray-600); font-size: 0.75rem;
+}
+.rate-item input {
+  width: 70px; padding: 4px 6px; border: 1px solid var(--gray-300);
+  border-radius: 4px; font-size: 0.78rem; text-align: right;
+}
+.rate-item .unit { font-size: 0.72rem; color: var(--gray-500); min-width: 14px; }
+
+/* ===== Preview Area ===== */
+.preview-area {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  height: calc(100vh - 56px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.a4-page {
+  width: 210mm;
+  min-height: 297mm;
+  background: var(--white);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* ===== Proposal Styles ===== */
+.proposal { padding: 0; font-size: 10.5pt; line-height: 1.7; color: var(--gray-800); }
+
+/* Cover */
+.proposal-cover {
+  height: 297mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: #ffffff;
+  color: #2d2d2d;
+  position: relative;
+  overflow: hidden;
+  page-break-after: always;
+}
+.proposal-cover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: linear-gradient(135deg, #1e3a2f 0%, #2d8659 40%, #5aab7e 70%, #d4ede0 100%);
+  border-bottom: 3px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(30,58,47,0.15);
+}
+.proposal-cover::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: linear-gradient(135deg, #d4ede0 0%, #5aab7e 30%, #2d8659 60%, #1e3a2f 100%);
+  border-top: 3px solid #ffffff;
+  box-shadow: 0 -2px 8px rgba(30,58,47,0.15);
+}
+.cover-content { position: relative; z-index: 1; padding: 40px; }
+.cover-logo {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+  color: #1e3a2f;
+}
+.cover-logo-sub { font-size: 0.85rem; color: #7aab96; letter-spacing: 6px; margin-bottom: 60px; }
+.cover-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+  line-height: 1.3;
+  color: #2d3748;
+}
+.cover-subtitle {
+  font-size: 1rem;
+  color: #6b7c93;
+  margin-bottom: 60px;
+}
+.cover-client {
+  font-size: 1.3rem;
+  font-weight: 700;
+  padding: 16px 48px;
+  border: 2px solid #1e3a2f;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 40px;
+  color: #1e3a2f;
+}
+.cover-date { font-size: 0.95rem; color: #a0aec0; }
+.cover-bottom {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 1;
+}
+.cover-company { font-size: 0.9rem; color: #a0aec0; }
+
+/* Proposal Body */
+.proposal-body { padding: 48px 52px; }
+.proposal-body h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 48px 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--blue);
+  display: inline-block;
+}
+.proposal-body h2:first-child { margin-top: 0; }
+.proposal-body h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gray-700);
+  margin: 28px 0 12px;
+}
+.proposal-body p { margin-bottom: 12px; color: var(--gray-700); }
+.proposal-body ul {
+  margin: 8px 0 16px 20px;
+  color: var(--gray-700);
+}
+.proposal-body li { margin-bottom: 6px; }
+
+/* Info box */
+.info-box {
+  background: var(--blue-light);
+  border-left: 4px solid var(--blue);
+  padding: 16px 20px;
+  border-radius: 0 8px 8px 0;
+  margin: 16px 0;
+}
+.warning-box {
+  background: var(--red-light);
+  border-left: 4px solid var(--red);
+  padding: 16px 20px;
+  border-radius: 0 8px 8px 0;
+  margin: 16px 0;
+}
+.warning-box strong { color: var(--red); }
+.success-box {
+  background: var(--green-light);
+  border-left: 4px solid var(--green);
+  padding: 16px 20px;
+  border-radius: 0 8px 8px 0;
+  margin: 16px 0;
+}
+
+/* Compare Table */
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+.compare-table th {
+  background: var(--navy);
+  color: var(--white);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+}
+.compare-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.compare-table tr:nth-child(even) td { background: var(--gray-50); }
+.compare-table .highlight-cell { background: var(--green-light) !important; color: var(--green); font-weight: 600; }
+.compare-table .danger-cell { background: var(--red-light) !important; color: var(--red); font-weight: 600; }
+
+/* Flow chart */
+.flow-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: 24px 0;
+  flex-wrap: wrap;
+}
+.flow-box {
+  background: var(--navy);
+  color: var(--white);
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: center;
+  min-width: 120px;
+}
+.flow-box.client-box { background: var(--gray-600); }
+.flow-box.ww-box { background: var(--blue); }
+.flow-box.worker-box { background: var(--navy); }
+.flow-arrow {
+  font-size: 1.5rem;
+  color: var(--gray-500);
+  padding: 0 8px;
+  font-weight: 700;
+}
+.flow-label {
+  font-size: 0.7rem;
+  color: var(--gray-500);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Quote table */
+.quote-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+.quote-table th {
+  background: var(--navy);
+  color: var(--white);
+  padding: 10px 14px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.quote-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--gray-200);
+  text-align: center;
+}
+.quote-table tr:last-child td {
+  border-bottom: 2px solid var(--navy);
+  font-weight: 700;
+}
+.quote-table .amount { font-size: 1.1rem; color: var(--navy); font-weight: 800; }
+
+/* Budget table (운영 예산안) — 테두리 있는 표 */
+.budget-block { break-inside: avoid; page-break-inside: avoid; }
+.budget-table { font-size: 0.78rem; border: 2px solid var(--navy); }
+.budget-table th { border: 1px solid var(--gray-300); }
+.budget-table td {
+  padding: 7px 12px;
+  border: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--gray-200);
+}
+.budget-table td:first-child { text-align: left; min-width: 80px; }
+.budget-table tfoot tr td { border: none; }
+
+/* Ref table */
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+.ref-table th {
+  background: var(--gray-50);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--gray-300);
+  color: var(--navy);
+}
+.ref-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+/* Project overview */
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+.overview-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gray-200);
+  border-right: 1px solid var(--gray-200);
+  display: flex;
+}
+.overview-item:nth-child(2n) { border-right: none; }
+.overview-label {
+  font-weight: 600;
+  color: var(--navy);
+  min-width: 80px;
+  font-size: 0.85rem;
+}
+.overview-value { color: var(--gray-700); font-size: 0.9rem; }
+
+/* Page break helpers */
+.page-break { page-break-before: always; }
+
+/* Footer in proposal */
+.proposal-footer {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 2px solid var(--gray-200);
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.8rem;
+}
+.proposal-footer .company-name {
+  font-weight: 800;
+  color: var(--navy);
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+/* ===== Mobile ===== */
+.mobile-toggle {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 200;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .container { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    position: relative;
+    top: 0;
+    max-height: none;
+  }
+  .sidebar.mobile-hidden { display: none; }
+  .preview-area {
+    padding: 16px;
+    height: auto;
+  }
+  .a4-page { width: 100%; min-height: auto; }
+  .proposal-cover { height: auto; min-height: 60vh; padding: 40px 20px; }
+  .proposal-body { padding: 24px 20px; }
+  .mobile-toggle { display: block; }
+  .header-actions .btn span.desktop-only { display: none; }
+  .flow-chart { gap: 4px; }
+  .overview-grid { grid-template-columns: 1fr; }
+  .overview-item { border-right: none; }
+}
+
+/* ===== Print ===== */
+/* ===== Cloud Modal ===== */
+.cloud-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 9000;
+  justify-content: center;
+  align-items: center;
+}
+.cloud-overlay.open { display: flex; }
+.cloud-modal {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  width: 90%;
+  max-width: 700px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.cloud-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.cloud-modal-header h3 { font-size: 1rem; margin: 0; }
+.cloud-modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+.cloud-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.cloud-table th {
+  background: var(--gray-50);
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--gray-200);
+  white-space: nowrap;
+}
+.cloud-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.cloud-table tr:hover { background: var(--blue-light); }
+.cloud-table .cloud-actions { white-space: nowrap; }
+.cloud-table .cloud-actions button {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  border-radius: 4px;
+  border: 1px solid var(--gray-200);
+  background: var(--white);
+  cursor: pointer;
+  margin-left: 4px;
+}
+.cloud-table .cloud-actions button:hover { background: var(--blue-light); }
+.cloud-table .cloud-actions button.btn-del { color: var(--red); border-color: var(--red); }
+.cloud-table .cloud-actions button.btn-del:hover { background: var(--red-light); }
+.cloud-empty { text-align: center; color: var(--gray-500); padding: 40px 0; }
+.cloud-loading { text-align: center; color: var(--gray-500); padding: 40px 0; }
+.cloud-modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--gray-200);
+  text-align: right;
+}
+
+@media print {
+  @page { margin: 15mm 12mm; }
+  body { background: white; }
+  .app-header, .sidebar, .mobile-toggle, .no-print, .cloud-overlay { display: none !important; }
+  .container { display: block; }
+  .preview-area {
+    padding: 0;
+    height: auto;
+    overflow: visible;
+  }
+  .a4-page {
+    box-shadow: none;
+    width: 100%;
+    border-radius: 0;
+  }
+  .proposal-cover {
+    height: 100vh;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 제목이 페이지 하단에 혼자 남지 않게 */
+  .proposal-body h2, .proposal-body h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* 테이블 행 단위로 잘림 허용 (긴 테이블도 자연스럽게 넘김) */
+  .quote-table, .compare-table, .ref-table {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+  /* 테이블 헤더를 매 페이지 반복 */
+  .quote-table thead, .compare-table thead, .ref-table thead {
+    display: table-header-group;
+  }
+  /* tfoot은 마지막에만 */
+  .quote-table tfoot {
+    display: table-footer-group;
+  }
+  /* 개별 행이 잘리지 않게 */
+  .quote-table tr, .compare-table tr, .ref-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* thead가 페이지 하단에 혼자 남지 않게 */
+  .quote-table thead tr, .compare-table thead tr {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* 짧은 블록 요소는 잘리지 않게 */
+  .info-box, .warning-box, .success-box, .overview-grid, .flow-chart {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 색상 출력 보장 */
+  .compare-table th, .quote-table th, .quote-table tfoot tr,
+  .flow-box, .overview-label,
+  .subtotal-row, .total-row {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* 예산안 표 테두리 + 한 페이지 유지 */
+  .budget-block { break-inside: avoid; page-break-inside: avoid; }
+  .budget-table, .budget-table td, .budget-table th {
+    border-color: var(--gray-300) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 페이지 넘김 후 여백 */
+  .page-break {
+    break-before: page;
+    page-break-before: always;
+  }
+}
+
+/* ===== Guide Box (sidebar) ===== */
+.guide-box {
+  background: var(--orange-light);
+  border: 1px solid #fbd38d;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+.guide-box strong { color: var(--orange); font-size: 0.8rem; }
+.guide-box ul { margin: 4px 0 0 16px; padding: 0; }
+.guide-box li { margin-bottom: 2px; }
+
+/* Tiered input rows */
+.tier-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.tier-row label {
+  min-width: 40px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 0 !important;
+}
+.tier-row input {
+  width: 70px;
+  flex: none;
+}
+.tier-row .tier-pay {
+  flex: 1;
+}
+
+/* ===== Misc ===== */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+.text-center { text-align: center; }
+.mt-2 { margin-top: 8px; }
+.mb-2 { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="app-header">
+  <div style="display:flex;align-items:center;">
+    <div class="logo">WALK<span>WITH</span></div>
+    <span class="subtitle" id="headerSubtitle">제안서 생성기</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="exportProposal()" title="JSON 파일로 저장">&#x1F4BE; <span class="desktop-only">저장</span></button>
+    <button class="btn btn-outline" onclick="document.getElementById('importFile').click()" title="저장한 파일 불러오기">&#x1F4C2; <span class="desktop-only">불러오기</span></button>
+    <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importProposal(event)">
+    <button class="btn btn-outline" onclick="saveToSheet()" title="구글시트에 저장">&#x2601; <span class="desktop-only">클라우드 저장</span></button>
+    <button class="btn btn-outline" onclick="openCloudModal()" title="구글시트에서 불러오기">&#x2601; <span class="desktop-only">클라우드 목록</span></button>
+    <button class="btn btn-outline" onclick="resetForm()">&#x21bb; <span class="desktop-only">초기화</span></button>
+    <button class="btn btn-primary" onclick="printProposal()">&#x1F5A8; <span class="desktop-only">인쇄 / PDF</span></button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- Sidebar: Input Form -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+
+      <!-- 저장자 -->
+      <div class="form-group" style="margin-bottom:12px;">
+        <label style="font-size:0.78rem;color:var(--gray-500);">작성자 (클라우드 저장 시 표시)</label>
+        <input type="text" id="savedBy" placeholder="예: 김OO" style="padding:6px 10px;font-size:0.85rem;">
+      </div>
+
+      <!-- 서비스 유형 -->
+      <div class="form-section" id="sec-service">
+        <div class="form-section-title" onclick="toggleSection('sec-service')">서비스 유형</div>
+        <div class="form-section-body">
+          <div class="form-group">
+            <label>제안서 유형 *</label>
+            <select id="serviceType" data-save onchange="onServiceTypeChange()">
+              <option value="dogup">도급 (업무도급)</option>
+              <option value="dispatch">파견 (인력파견)</option>
+              <option value="recruit">채용대행</option>
+              <option value="callcenter">콜센터 전담</option>
+              <option value="csshare">CS 쉐어링</option>
+            </select>
+          </div>
+          <div class="info-box" id="serviceDesc" style="font-size:0.8rem;margin:0;">
+            도급: 불법파견 리스크 없는 안전한 외주 운영
+          </div>
+        </div>
+      </div>
+
+      <!-- 고객 정보 -->
+      <div class="form-section" id="sec-client">
+        <div class="form-section-title" onclick="toggleSection('sec-client')">고객사 정보</div>
+        <div class="form-section-body">
+          <div class="form-group">
+            <label>고객사명 *</label>
+            <input type="text" id="clientName" placeholder="예: (주)한국제조" data-save>
+          </div>
+          <div class="form-group">
+            <label>업종</label>
+            <input type="text" id="clientIndustry" placeholder="예: 제조업 (자동차 부품)" data-save>
+          </div>
+          <div class="form-group">
+            <label>담당자명</label>
+            <input type="text" id="clientContact" placeholder="예: 김부장" data-save>
+          </div>
+          <div class="form-group">
+            <label>근무지역</label>
+            <input type="text" id="workLocation" placeholder="예: 경기도 화성시" data-save>
+          </div>
+        </div>
+      </div>
+
+      <!-- 업무 정보 -->
+      <div class="form-section" id="sec-work">
+        <div class="form-section-title" onclick="toggleSection('sec-work')">업무 정보</div>
+        <div class="form-section-body">
+          <div class="form-group">
+            <label>업무 내용</label>
+            <textarea id="workDescription" placeholder="예: 생산라인 조립, 포장, 검수 등" rows="3" data-save></textarea>
+          </div>
+          <div class="form-group">
+            <label>필요 인원</label>
+            <input type="number" id="workerCount" placeholder="예: 20" min="1" data-save>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>근무시간</label>
+              <input type="text" id="workHours" placeholder="예: 08:00~17:00" data-save>
+            </div>
+            <div class="form-group">
+              <label>근무형태</label>
+              <select id="workShift" data-save>
+                <option value="주간">주간 근무</option>
+                <option value="2교대">2교대</option>
+                <option value="3교대">3교대</option>
+                <option value="기타">기타</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>도입 희망시기</label>
+            <input type="text" id="startDate" placeholder="예: 2026년 4월" data-save>
+          </div>
+          <div class="form-group">
+            <label>계약 기간</label>
+            <input type="text" id="contractPeriod" placeholder="예: 1년 (자동갱신)" data-save>
+          </div>
+        </div>
+      </div>
+
+      <!-- 견적 (유형별 동적 생성) -->
+      <div class="form-section" id="sec-quote">
+        <div class="form-section-title" onclick="toggleSection('sec-quote')">견적 정보</div>
+        <div class="form-section-body" id="quoteFormContainer">
+          <!-- renderQuoteForm()에서 동적으로 생성 -->
+        </div>
+      </div>
+
+      <!-- 레퍼런스 -->
+      <div class="form-section" id="sec-ref">
+        <div class="form-section-title" onclick="toggleSection('sec-ref')">레퍼런스 (거래처 실적)</div>
+        <div class="form-section-body">
+          <div class="form-group" style="margin-bottom:10px;">
+            <label><input type="checkbox" id="showRef" checked data-save onchange="updatePreview(); saveData();"> 제안서에 레퍼런스 포함</label>
+          </div>
+          <div class="ref-list" id="refList">
+            <div class="ref-row">
+              <input type="text" placeholder="업체명" class="ref-company" data-save>
+              <input type="text" placeholder="업종" class="ref-industry" data-save>
+              <input type="text" placeholder="인원" class="ref-count" data-save style="width:70px;flex:none;">
+              <input type="text" placeholder="기간" class="ref-period" data-save>
+              <button class="btn-remove" onclick="removeRef(this)" title="삭제">&times;</button>
+            </div>
+          </div>
+          <button class="btn-add-ref" onclick="addRef()">+ 거래처 추가</button>
+        </div>
+      </div>
+
+      <!-- 추가 메모 -->
+      <div class="form-section" id="sec-memo">
+        <div class="form-section-title" onclick="toggleSection('sec-memo')">추가 사항</div>
+        <div class="form-section-body">
+          <div class="form-group">
+            <label>특이사항 / 메모</label>
+            <textarea id="memo" placeholder="고객사에 추가로 전달할 내용" rows="4" data-save></textarea>
+          </div>
+          <div class="form-group">
+            <label>제안 일자</label>
+            <input type="date" id="proposalDate" data-save>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Preview -->
+  <main class="preview-area" id="previewArea">
+    <div class="a4-page" id="proposalOutput">
+
+      <!-- === COVER === -->
+      <div class="proposal-cover" id="coverPage">
+        <div class="cover-content">
+          <div class="cover-logo">WALKWITH</div>
+          <div class="cover-logo-sub">워 크 위 드</div>
+          <div class="cover-title" id="coverTitle">도급 운영 제안서</div>
+          <div class="cover-subtitle" id="coverSubtitle">안정적인 인력 운영, 법적 리스크 없는 도급 솔루션</div>
+          <div class="cover-client" id="coverClient">귀사</div>
+          <div class="cover-date" id="coverDate"></div>
+        </div>
+        <div class="cover-bottom">
+          <div class="cover-company">주식회사 워크위드 WALKWITH Co., Ltd.</div>
+        </div>
+      </div>
+
+      <!-- === BODY (dynamically generated) === -->
+      <div class="proposal-body" id="proposalBody">
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Mobile toggle -->
+<button class="mobile-toggle no-print" id="mobileToggle" onclick="toggleMobileSidebar()" title="입력 폼 열기/닫기">&#x270E;</button>
+
+<script>
+// ===== Cloud Storage =====
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxo5NBIzDLpIfr2BamgydK1GD_1m2og41ejleA8gqtewvVR3OtJRuT2TKLRxefzET5p/exec';
+let currentCloudId = null; // 현재 불러온 제안서의 클라우드 ID
+
+// ===== Utility =====
+function formatNumber(el) {
+  let v = el.value.replace(/[^0-9]/g, '');
+  if (v) el.value = Number(v).toLocaleString('ko-KR');
+}
+function parseNumber(s) {
+  if (!s) return 0;
+  return parseInt(String(s).replace(/[^0-9]/g, ''), 10) || 0;
+}
+function numberWithCommas(n) {
+  return n.toLocaleString('ko-KR');
+}
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== Section Toggle =====
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
+// ===== Mobile =====
+function toggleMobileSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-hidden');
+}
+
+// ===== Reference Rows =====
+function addRef() {
+  const list = document.getElementById('refList');
+  const row = document.createElement('div');
+  row.className = 'ref-row';
+  row.innerHTML = `
+    <input type="text" placeholder="업체명" class="ref-company" data-save>
+    <input type="text" placeholder="업종" class="ref-industry" data-save>
+    <input type="text" placeholder="인원" class="ref-count" data-save style="width:70px;flex:none;">
+    <input type="text" placeholder="기간" class="ref-period" data-save>
+    <button class="btn-remove" onclick="removeRef(this)" title="삭제">&times;</button>
+  `;
+  list.appendChild(row);
+  bindInputListeners();
+}
+function removeRef(btn) {
+  const row = btn.closest('.ref-row');
+  const list = document.getElementById('refList');
+  if (list.children.length > 1) {
+    row.remove();
+    updatePreview();
+    saveData();
+  }
+}
+
+// ===== Service Type Configuration =====
+const SERVICE_CONFIG = {
+  dogup: {
+    title: '도급 운영 제안서',
+    subtitle: '안정적인 인력 운영, 법적 리스크 없는 도급 솔루션',
+    headerSub: '도급 제안서 생성기',
+    desc: '도급: 불법파견 리스크 없는 안전한 외주 운영',
+    unitLabel: '도급 인력',
+    dept: '도급사업부',
+    quoteType: 'personnel',
+  },
+  dispatch: {
+    title: '인력파견 제안서',
+    subtitle: '빠른 충원, 유연한 인력 운영 솔루션',
+    headerSub: '파견 제안서 생성기',
+    desc: '파견: 빠른 충원과 유연한 인력 운영',
+    unitLabel: '파견 인력',
+    dept: '파견사업부',
+    quoteType: 'personnel',
+  },
+  recruit: {
+    title: '채용대행 제안서',
+    subtitle: '성공 기반 수수료, 리스크 없는 채용 파트너',
+    headerSub: '채용대행 제안서 생성기',
+    desc: '채용대행: 성공 시에만 수수료, 채용 리스크 제로',
+    unitLabel: '채용대행 수수료',
+    dept: '채용대행사업부',
+    quoteType: 'feeRate',
+  },
+  callcenter: {
+    title: '콜센터 전담 운영 제안서',
+    subtitle: '전용 상담팀 구성, 고품질 CS 운영',
+    headerSub: '콜센터 전담 제안서 생성기',
+    desc: '콜센터 전담: 귀사 전용팀 배치, 대규모 CS 운영',
+    unitLabel: '전담 상담원',
+    dept: '콜센터사업부',
+    quoteType: 'tiered',
+  },
+  csshare: {
+    title: 'CS 쉐어링 제안서',
+    subtitle: '공유 상담원 모델, 비용 효율적 CS 운영',
+    headerSub: 'CS 쉐어링 제안서 생성기',
+    desc: 'CS 쉐어링: 공유 상담원으로 비용 효율 극대화',
+    unitLabel: '쉐어링 상담원',
+    dept: '콜센터사업부',
+    quoteType: 'callBased',
+  },
+};
+
+// 콜쉐어링 확정 단가표
+const CS_SHARE_TIERS = [
+  { label: '~20콜/일', monthly: 500000 },
+  { label: '~50콜/일', monthly: 800000 },
+  { label: '~100콜/일', monthly: 1500000 },
+  { label: '~200콜/일', monthly: 3000000 },
+];
+
+// ===== Quote Form Rendering (sidebar) =====
+function renderQuoteForm(type) {
+  const container = document.getElementById('quoteFormContainer');
+  const cfg = SERVICE_CONFIG[type];
+  let html = '';
+
+  if (cfg.quoteType === 'personnel') {
+    // 도급 / 파견 — 견적시뮬레이터 구조 차용
+    html = `
+      <div class="form-row">
+        <div class="form-group">
+          <label>인원수 (명)</label>
+          <input type="number" id="pWorkers" placeholder="20" min="1" data-save>
+        </div>
+        <div class="form-group">
+          <label>적용시급 (원)</label>
+          <input type="text" id="pHourly" placeholder="10,500" value="10,500" data-save oninput="formatNumber(this)">
+          <div style="font-size:0.7rem;color:var(--gray-500);margin-top:2px;">2026 최저시급: 10,320원</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>교통비 (인당/월, 원)</label>
+          <input type="text" id="pTransport" placeholder="100,000" value="100,000" data-save oninput="formatNumber(this)">
+        </div>
+        <div class="form-group">
+          <label>직책수당 (현장관리자)</label>
+          <input type="text" id="pLeaderPay" placeholder="100,000" value="100,000" data-save oninput="formatNumber(this)">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>야간수당 (월, 원)</label>
+          <input type="text" id="pNightPay" placeholder="0" data-save oninput="formatNumber(this)">
+        </div>
+        <div class="form-group">
+          <label>기타비용 (월, 원)</label>
+          <input type="text" id="pEtcCost" placeholder="0" data-save oninput="formatNumber(this)">
+          <div style="font-size:0.7rem;color:var(--gray-500);margin-top:2px;">유니폼/교육/채용 등</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>관리수수료 (%)</label>
+        <input type="number" id="pMgmtRate" placeholder="8" min="0" max="30" step="0.5" value="8" data-save>
+      </div>
+
+      <div style="margin-top:10px;">
+        <span style="font-size:0.8rem;font-weight:600;color:var(--gray-600);">요율 설정</span>
+        <button type="button" class="rate-toggle-btn" onclick="toggleRateSettings()">수정하기</button>
+        <div class="rate-settings" id="rateSettings">
+          <div style="font-size:0.7rem;color:var(--gray-500);margin-bottom:6px;">업종/연도에 따라 요율이 다릅니다. 필요 시 수정하세요.</div>
+          <div class="rate-grid">
+            <div class="rate-item"><span>국민연금</span><input type="number" id="ratePension" value="4.5" step="0.1" data-save><span class="unit">%</span></div>
+            <div class="rate-item"><span>건강보험</span><input type="number" id="rateHealth" value="3.545" step="0.001" data-save><span class="unit">%</span></div>
+            <div class="rate-item"><span>장기요양</span><input type="number" id="rateLongCare" value="13.14" step="0.01" data-save><span class="unit">%</span></div>
+            <div class="rate-item"><span>고용보험</span><input type="number" id="rateEmploy" value="0.9" step="0.1" data-save><span class="unit">%</span></div>
+            <div class="rate-item"><span>산재보험</span><input type="number" id="rateIndust" value="1.5" step="0.1" data-save><span class="unit">%</span></div>
+            <div class="rate-item"><span>퇴직금</span><input type="number" id="rateRetire" value="8.33" step="0.01" data-save><span class="unit">%</span></div>
+            <div class="rate-item"><span>사업소세</span><input type="number" id="rateBizTax" value="0.5" step="0.1" data-save><span class="unit">%</span></div>
+          </div>
+          <div style="margin-top:8px;">
+            <div class="rate-item" style="gap:8px;">
+              <span style="min-width:68px;font-size:0.75rem;color:var(--gray-600);">연차수당</span>
+              <select id="pAnnualLeaveMode" data-save style="padding:4px 6px;border:1px solid var(--gray-300);border-radius:4px;font-size:0.78rem;">
+                <option value="include">포함 (통상시급×8h)</option>
+                <option value="ondemand">발생시 청구</option>
+                <option value="off">미적용</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="calculated" id="quoteTotalDisplay" style="margin-top:12px;">월 예상 비용: -<small>VAT 별도</small></div>
+      <div class="guide-box">
+        <strong>&#x1F4CC; 단가 참고 가이드</strong>
+        <ul>
+          <li>제조업 시급: 10,500~13,000원</li>
+          <li>물류/택배 시급: 10,500~12,000원</li>
+          <li>관리수수료: 채용 광고비, 4대보험 행정, 노무자문, 결원대응 포함</li>
+          <li>퇴직금: 1년 이상 근속 시 발생 (8.33%)</li>
+        </ul>
+      </div>
+    `;
+  } else if (cfg.quoteType === 'feeRate') {
+    // 채용대행
+    html = `
+      <div class="form-group">
+        <label>채용 인원 (명)</label>
+        <input type="number" id="recruitCount" placeholder="3" min="1" data-save>
+      </div>
+      <div class="form-group">
+        <label>예상 연봉 (원, 1인 기준)</label>
+        <input type="text" id="recruitSalary" placeholder="30,000,000" data-save oninput="formatNumber(this)">
+      </div>
+      <div class="form-group">
+        <label>수수료율 (%)</label>
+        <input type="number" id="recruitFeeRate" placeholder="8" min="1" max="50" step="0.5" value="8" data-save>
+      </div>
+      <div class="calculated" id="quoteTotalDisplay">총 수수료 예상: -<small>채용 성공 시에만 발생 · VAT 별도</small></div>
+      <div class="guide-box">
+        <strong>&#x1F4CC; 수수료율 가이드</strong>
+        <ul>
+          <li>생산직/단순직: 5~10%</li>
+          <li>사무직/기술직: 10~15%</li>
+          <li>전문직/관리직: 15~25%</li>
+          <li>3개월 이내 퇴사 시 무료 재채용</li>
+        </ul>
+      </div>
+    `;
+  } else if (cfg.quoteType === 'tiered') {
+    // 콜센터 전담
+    html = `
+      <div class="tier-row">
+        <label>팀장</label>
+        <input type="number" id="ccLeader" placeholder="0" min="0" data-save style="width:60px;">
+        <span style="font-size:0.75rem;color:var(--gray-500);">명 ×</span>
+        <input type="text" id="ccLeaderPay" placeholder="3,800,000" value="3,800,000" data-save oninput="formatNumber(this)" class="tier-pay">
+      </div>
+      <div class="tier-row">
+        <label>선임</label>
+        <input type="number" id="ccSenior" placeholder="0" min="0" data-save style="width:60px;">
+        <span style="font-size:0.75rem;color:var(--gray-500);">명 ×</span>
+        <input type="text" id="ccSeniorPay" placeholder="3,200,000" value="3,200,000" data-save oninput="formatNumber(this)" class="tier-pay">
+      </div>
+      <div class="tier-row">
+        <label>일반</label>
+        <input type="number" id="ccJunior" placeholder="0" min="0" data-save style="width:60px;">
+        <span style="font-size:0.75rem;color:var(--gray-500);">명 ×</span>
+        <input type="text" id="ccJuniorPay" placeholder="2,900,000" value="2,900,000" data-save oninput="formatNumber(this)" class="tier-pay">
+      </div>
+      <div class="tier-row">
+        <label>단기</label>
+        <input type="number" id="ccTemp" placeholder="0" min="0" data-save style="width:60px;">
+        <span style="font-size:0.75rem;color:var(--gray-500);">명 ×</span>
+        <input type="text" id="ccTempPay" placeholder="2,500,000" value="2,500,000" data-save oninput="formatNumber(this)" class="tier-pay">
+      </div>
+      <div class="form-group" style="margin-top:12px;">
+        <label>ASP 좌석료 (원/인)</label>
+        <input type="text" id="ccASP" placeholder="350,000" value="350,000" data-save oninput="formatNumber(this)">
+      </div>
+      <div class="form-group">
+        <label>관리수수료 (%)</label>
+        <input type="number" id="ccMgmtFee" placeholder="8" min="0" max="30" step="0.5" value="8" data-save>
+      </div>
+      <div class="calculated" id="quoteTotalDisplay">월 예상 비용: -<small>VAT 별도</small></div>
+      <div class="guide-box">
+        <strong>&#x1F4CC; 단가 가이드</strong>
+        <ul>
+          <li>ASP: 시설/좌석/보안/관리 포함</li>
+          <li>관리수수료: 채용, 4대보험, 노무 등 포함</li>
+          <li>팀장은 10명당 1명 권장</li>
+        </ul>
+      </div>
+    `;
+  } else if (cfg.quoteType === 'callBased') {
+    // CS 쉐어링
+    html = `
+      <div class="form-group">
+        <label>일 평균 콜 수</label>
+        <select id="csCallTier" data-save onchange="onCsCallTierChange()">
+          <option value="0">~20콜/일 (월 50만원)</option>
+          <option value="1">~50콜/일 (월 80만원)</option>
+          <option value="2">~100콜/일 (월 150만원)</option>
+          <option value="3">~200콜/일 (월 300만원)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label><input type="checkbox" id="csCustomMode" data-save onchange="onCsCustomToggle()"> 맞춤 입력</label>
+      </div>
+      <div id="csCustomFields" style="display:none;">
+        <div class="form-group">
+          <label>기본료 (월, 원)</label>
+          <input type="text" id="csBaseFee" placeholder="500,000" data-save oninput="formatNumber(this)">
+        </div>
+        <div class="form-group">
+          <label>초과 콜 단가 (원/건)</label>
+          <input type="text" id="csPerCall" placeholder="1,000" data-save oninput="formatNumber(this)">
+        </div>
+        <div class="form-group">
+          <label>예상 월 초과 콜 수 (건)</label>
+          <input type="number" id="csExtraCalls" placeholder="0" min="0" data-save>
+        </div>
+      </div>
+      <div class="calculated" id="quoteTotalDisplay">월 예상 비용: -<small>VAT 별도</small></div>
+      <div class="guide-box">
+        <strong>&#x1F4CC; 요금 가이드</strong>
+        <ul>
+          <li>초기 구축비 무료, 최소 계약 없음</li>
+          <li>운영시간: 평일 09:00~18:00</li>
+          <li>야간/주말 확장 시 별도 협의</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+  bindInputListeners();
+}
+
+function toggleRateSettings() {
+  const el = document.getElementById('rateSettings');
+  if (el) el.classList.toggle('open');
+}
+
+function onCsCallTierChange() {
+  updatePreview();
+  saveData();
+}
+
+function onCsCustomToggle() {
+  const custom = document.getElementById('csCustomMode');
+  const fields = document.getElementById('csCustomFields');
+  const tierSelect = document.getElementById('csCallTier');
+  if (custom && fields) {
+    fields.style.display = custom.checked ? 'block' : 'none';
+    if (tierSelect) tierSelect.disabled = custom.checked;
+  }
+  updatePreview();
+  saveData();
+}
+
+// ===== Dynamic Body Content =====
+function getBodyHTML(type, v) {
+  const clientName = escHtml(v.clientName || '-');
+  const clientIndustry = escHtml(v.clientIndustry || '-');
+  const workDesc = escHtml(v.workDescription || '-');
+  const workerCount = v.workerCount ? v.workerCount + '명' : '-';
+  const workHours = escHtml(v.workHours || '-');
+  const workShift = escHtml(v.workShift || '-');
+  const workLocation = escHtml(v.workLocation || '-');
+  const startDate = escHtml(v.startDate || '-');
+
+  // Common: overview + company intro
+  let html = `
+    <h2>1. 프로젝트 개요</h2>
+    <div class="overview-grid">
+      <div class="overview-item"><span class="overview-label">고객사</span><span class="overview-value">${clientName}</span></div>
+      <div class="overview-item"><span class="overview-label">업종</span><span class="overview-value">${clientIndustry}</span></div>
+      <div class="overview-item"><span class="overview-label">업무내용</span><span class="overview-value">${workDesc}</span></div>
+      <div class="overview-item"><span class="overview-label">필요인원</span><span class="overview-value">${workerCount}</span></div>
+      <div class="overview-item"><span class="overview-label">근무시간</span><span class="overview-value">${workHours}</span></div>
+      <div class="overview-item"><span class="overview-label">근무형태</span><span class="overview-value">${workShift}</span></div>
+      <div class="overview-item"><span class="overview-label">근무지역</span><span class="overview-value">${workLocation}</span></div>
+      <div class="overview-item"><span class="overview-label">도입시기</span><span class="overview-value">${startDate}</span></div>
+    </div>
+
+    <h2>2. 회사 소개</h2>
+    <p><strong>주식회사 워크위드(WALKWITH)</strong>는 도급, 인력파견, 채용대행, 콜센터 운영 등 종합 인력 아웃소싱 서비스를 제공하는 전문 기업입니다.</p>
+    <p>다년간의 현장 운영 경험을 바탕으로, 고객사의 생산성 향상과 인력 운영 효율화를 위한 맞춤형 솔루션을 제공합니다.</p>
+    <div class="info-box">
+      <strong>핵심 서비스:</strong> 도급 운영 | 인력파견 | 채용대행 | 콜센터 전담 | CS 쉐어링<br>
+      <strong>강점:</strong> 자체 채용 네트워크 보유, 현장관리자 상주 운영, 빠른 충원 체계
+    </div>
+  `;
+
+  // Type-specific body sections
+  if (type === 'dogup') {
+    html += getDogupBody(v);
+  } else if (type === 'dispatch') {
+    html += getDispatchBody(v);
+  } else if (type === 'recruit') {
+    html += getRecruitBody(v);
+  } else if (type === 'callcenter') {
+    html += getCallcenterBody(v);
+  } else if (type === 'csshare') {
+    html += getCsShareBody(v);
+  }
+
+  // Common: Quote (새 페이지) + Reference + Memo + Footer
+  html += '<div class="page-break"></div>';
+  html += getQuoteHTML(type, v);
+  html += getRefHTML(type);
+  html += getMemoHTML(v);
+  html += getFooterHTML(type);
+
+  return html;
+}
+
+// ===== 도급 Body =====
+function getDogupBody(v) {
+  const clientLabel = escHtml(v.clientName || '고객사');
+  return `
+    <h2>3. 도급과 파견의 차이</h2>
+    <h3>왜 도급인가?</h3>
+    <p>최근 근로감독 강화로 <strong>불법파견 적발 사례</strong>가 증가하고 있습니다. 파견과 도급의 차이를 정확히 이해하고, 법적으로 안전한 운영 구조를 갖추는 것이 중요합니다.</p>
+    <div class="warning-box">
+      <strong>불법파견 적발 시 리스크</strong><br>
+      &#x26A0; 직접고용 의무 발생 (파견근로자 전원 정규직 전환)<br>
+      &#x26A0; 과태료 최대 3,000만원<br>
+      &#x26A0; 형사처벌 가능 (3년 이하 징역 또는 3,000만원 이하 벌금)<br>
+      &#x26A0; 기업 이미지 실추 및 노무 리스크 장기화
+    </div>
+    <table class="compare-table">
+      <thead><tr><th>구분</th><th>파견</th><th>도급</th></tr></thead>
+      <tbody>
+        <tr><td><strong>계약 형태</strong></td><td>근로자파견계약</td><td>도급(용역)계약</td></tr>
+        <tr><td><strong>지휘·명령</strong></td><td class="danger-cell">고객사가 직접 지시</td><td class="highlight-cell">워크위드 관리자가 지시</td></tr>
+        <tr><td><strong>제조업 적용</strong></td><td class="danger-cell">직접생산공정 파견 금지</td><td class="highlight-cell">업종 제한 없음</td></tr>
+        <tr><td><strong>고용 주체</strong></td><td>파견사업주</td><td>수급사업주 (워크위드)</td></tr>
+        <tr><td><strong>4대보험·급여</strong></td><td>파견사업주 처리</td><td>워크위드 처리</td></tr>
+        <tr><td><strong>근태 관리</strong></td><td class="danger-cell">고객사 관여 → 불법파견 소지</td><td class="highlight-cell">워크위드가 독립적 관리</td></tr>
+        <tr><td><strong>법적 리스크</strong></td><td class="danger-cell">직접고용의무, 형사처벌</td><td class="highlight-cell">적법한 외주 운영</td></tr>
+      </tbody>
+    </table>
+    <div class="success-box">
+      <strong>워크위드 도급의 핵심:</strong> 고객사가 근로자에게 직접 업무 지시를 하지 않으므로 불법파견 리스크가 원천 차단됩니다. 모든 지휘·명령은 워크위드 현장관리자를 통해 이루어집니다.
+    </div>
+
+    <h3>4대보험 전원 가입 — 법적 리스크 제로</h3>
+    <p>일부 아웃소싱 업체는 비용 절감을 위해 <strong>3.3% 사업소득 신고</strong>로 근로자를 처리합니다. 이는 근로기준법 위반이며, 고객사에도 연대 책임이 발생할 수 있습니다.</p>
+    <div class="warning-box">
+      <strong>3.3% 신고 업체의 리스크</strong><br>
+      &#x26A0; 실질적 근로관계임에도 사업소득 처리 → <strong>근로기준법 위반</strong><br>
+      &#x26A0; 근로자가 신고 시 → 4대보험 소급 가입 + 과태료 부과<br>
+      &#x26A0; 산재 발생 시 → 산재보험 미가입으로 <strong>고객사에 손해배상 청구</strong> 가능<br>
+      &#x26A0; 퇴직금, 연차수당 등 미지급 임금 소송 리스크<br>
+      &#x26A0; 고용노동부 근로감독 시 <strong>원청(고객사)까지 조사 대상</strong>
+    </div>
+    <table class="compare-table">
+      <thead><tr><th>구분</th><th>3.3% 신고 업체</th><th>워크위드</th></tr></thead>
+      <tbody>
+        <tr><td><strong>4대보험</strong></td><td class="danger-cell">미가입 (불법)</td><td class="highlight-cell">전원 가입</td></tr>
+        <tr><td><strong>근로계약</strong></td><td class="danger-cell">사업소득 계약 (위장)</td><td class="highlight-cell">정식 근로계약</td></tr>
+        <tr><td><strong>산재 발생 시</strong></td><td class="danger-cell">고객사 책임 전가 가능</td><td class="highlight-cell">산재보험 즉시 적용</td></tr>
+        <tr><td><strong>퇴직금</strong></td><td class="danger-cell">미지급 (소송 리스크)</td><td class="highlight-cell">법정 퇴직금 지급</td></tr>
+        <tr><td><strong>근로감독 시</strong></td><td class="danger-cell">원청 연대 책임</td><td class="highlight-cell">적법 운영, 리스크 없음</td></tr>
+        <tr><td><strong>단가</strong></td><td>낮음 (불법으로 비용 절감)</td><td>적정 (법적 비용 포함)</td></tr>
+      </tbody>
+    </table>
+    <div class="success-box">
+      <strong>워크위드는 전 근로자 4대보험 가입, 정식 근로계약 체결을 원칙으로 합니다.</strong><br>
+      단가가 다소 높더라도 법적 리스크가 없는 운영이 고객사의 장기적 비용 절감으로 이어집니다.
+    </div>
+
+    <h2>4. 도급 운영 구조</h2>
+    <h3>지휘체계 분리 구조</h3>
+    <p>도급의 핵심은 <strong>지휘체계의 완전한 분리</strong>입니다. 고객사는 워크위드 현장관리자에게 업무 결과물을 요청하고, 현장관리자가 근로자를 직접 지휘·관리합니다.</p>
+    <div class="flow-chart">
+      <div><div class="flow-box client-box">${clientLabel}</div><div class="flow-label">발주</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box ww-box">워크위드<br>현장관리자</div><div class="flow-label">지휘·관리</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box worker-box">도급 근로자</div><div class="flow-label">작업 수행</div></div>
+    </div>
+    <h3>워크위드가 책임지는 영역</h3>
+    <table class="compare-table">
+      <thead><tr><th>영역</th><th>내용</th></tr></thead>
+      <tbody>
+        <tr><td><strong>인력 채용</strong></td><td>자체 네트워크를 통한 신속 채용, 내·외국인 근로자 확보</td></tr>
+        <tr><td><strong>근로계약</strong></td><td>워크위드 ↔ 근로자 직접 근로계약 체결</td></tr>
+        <tr><td><strong>4대보험</strong></td><td>국민연금, 건강보험, 고용보험, 산재보험 전액 처리</td></tr>
+        <tr><td><strong>급여 지급</strong></td><td>워크위드가 직접 급여 산정 및 지급</td></tr>
+        <tr><td><strong>근태 관리</strong></td><td>출·퇴근, 연장근로, 휴가 등 독립적 관리</td></tr>
+        <tr><td><strong>현장 관리</strong></td><td>현장관리자(반장) 상주 배치, 업무 배분 및 품질 관리</td></tr>
+        <tr><td><strong>인력 충원</strong></td><td>결근·퇴사 발생 시 즉시 대체 인력 투입</td></tr>
+      </tbody>
+    </table>
+
+    <h2>5. 현장관리 체계</h2>
+    <h3>반장 제도</h3>
+    <p>현장별 <strong>반장(관리자)</strong>을 배치하여 근로자를 직접 관리합니다.</p>
+    <ul>
+      <li><strong>일일 근태 확인</strong> — 출·퇴근 관리 및 근무 현황 실시간 파악</li>
+      <li><strong>업무 배분</strong> — 생산 계획에 따른 인원 배치 및 업무 지시</li>
+      <li><strong>품질 관리</strong> — 작업 결과물 품질 검수 및 피드백</li>
+      <li><strong>결근 대응</strong> — 당일 결근 시 예비 인력 즉시 투입</li>
+      <li><strong>안전 관리</strong> — 산업안전 교육 실시, 현장 안전 점검</li>
+    </ul>
+
+    <div class="page-break"></div>
+    <h2>6. 구인 능력</h2>
+    <div class="info-box">
+      <strong>워크위드 채용 역량 요약</strong><br>
+      &#x2714; 자체 채용 네트워크 보유 (구인 플랫폼, DB, 소개 등)<br>
+      &#x2714; 내국인 + 외국인(E-9, H-2 등) 근로자 풀 확보<br>
+      &#x2714; 평균 충원 기간: <strong>7일 이내</strong><br>
+      &#x2714; 대량 채용 경험: 시즌 <strong>300명 이상</strong> 동시 운영 실적
+    </div>
+    <p>워크위드는 다년간 축적된 채용 노하우와 네트워크를 보유하고 있어, 빠른 시간 내에 적합한 인력을 확보할 수 있습니다.</p>
+  `;
+}
+
+// ===== 파견 Body =====
+function getDispatchBody(v) {
+  const clientLabel = escHtml(v.clientName || '고객사');
+  return `
+    <h2>3. 인력파견 서비스 개요</h2>
+    <h3>인력파견이란?</h3>
+    <p>인력파견은 파견사업주(워크위드)가 근로자를 고용한 후, 고객사의 <strong>지휘·명령 하에 근무</strong>하게 하는 형태입니다. 고객사가 직접 업무 지시를 할 수 있어 현장 운영의 유연성이 높습니다.</p>
+    <div class="info-box">
+      <strong>인력파견의 장점</strong><br>
+      &#x2714; 고객사가 직접 업무 지시 가능 — 현장 밀착 관리<br>
+      &#x2714; 채용·4대보험·급여 등 행정 부담 제로<br>
+      &#x2714; 필요한 기간만큼 유연한 인력 운영<br>
+      &#x2714; 인력 교체가 용이하여 리스크 최소화
+    </div>
+
+    <h3>파견 vs 직접고용 비교</h3>
+    <table class="compare-table">
+      <thead><tr><th>구분</th><th>직접 고용</th><th>워크위드 파견</th></tr></thead>
+      <tbody>
+        <tr><td><strong>채용 소요</strong></td><td class="danger-cell">2~4주 이상</td><td class="highlight-cell">최단 3일 내 투입</td></tr>
+        <tr><td><strong>4대보험 처리</strong></td><td class="danger-cell">고객사 직접 처리</td><td class="highlight-cell">워크위드가 전액 처리</td></tr>
+        <tr><td><strong>급여 관리</strong></td><td class="danger-cell">고객사 부담</td><td class="highlight-cell">워크위드가 산정·지급</td></tr>
+        <tr><td><strong>퇴직금</strong></td><td class="danger-cell">고객사 부담</td><td class="highlight-cell">워크위드가 부담</td></tr>
+        <tr><td><strong>인력 교체</strong></td><td class="danger-cell">해고 리스크</td><td class="highlight-cell">즉시 교체 가능</td></tr>
+        <tr><td><strong>행정 업무</strong></td><td class="danger-cell">채용~퇴직 전 과정</td><td class="highlight-cell">워크위드 일괄 처리</td></tr>
+      </tbody>
+    </table>
+
+    <h3>4대보험 전원 가입 — 법적 리스크 제로</h3>
+    <p>일부 업체는 <strong>3.3% 사업소득 신고</strong>로 비용을 낮추지만, 이는 불법입니다.</p>
+    <div class="warning-box">
+      <strong>3.3% 신고 업체의 리스크</strong><br>
+      &#x26A0; 실질적 근로관계임에도 사업소득 처리 → <strong>근로기준법 위반</strong><br>
+      &#x26A0; 산재 발생 시 → <strong>고객사에 손해배상 청구</strong> 가능<br>
+      &#x26A0; 고용노동부 근로감독 시 <strong>원청까지 조사 대상</strong>
+    </div>
+    <div class="success-box">
+      <strong>워크위드는 전 파견근로자 4대보험 가입, 정식 근로계약 체결을 원칙으로 합니다.</strong>
+    </div>
+
+    <h2>4. 파견 운영 구조</h2>
+    <div class="flow-chart">
+      <div><div class="flow-box client-box">${clientLabel}</div><div class="flow-label">지휘·명령</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box worker-box">파견 근로자</div><div class="flow-label">업무 수행</div></div>
+    </div>
+    <div class="flow-chart" style="margin-top:8px;">
+      <div><div class="flow-box ww-box">워크위드</div><div class="flow-label">고용·관리</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box worker-box">파견 근로자</div><div class="flow-label">근로계약</div></div>
+    </div>
+    <p style="margin-top:16px;">고객사는 파견근로자에게 직접 업무 지시를 할 수 있으며, 고용·급여·보험 등 행정은 워크위드가 전담합니다.</p>
+
+    <h2>5. 워크위드 파견 관리 영역</h2>
+    <table class="compare-table">
+      <thead><tr><th>영역</th><th>내용</th></tr></thead>
+      <tbody>
+        <tr><td><strong>인력 채용</strong></td><td>자체 네트워크를 통한 신속 채용 (최단 3일 내 투입)</td></tr>
+        <tr><td><strong>근로계약</strong></td><td>워크위드 ↔ 근로자 근로계약 체결</td></tr>
+        <tr><td><strong>4대보험</strong></td><td>국민연금, 건강보험, 고용보험, 산재보험 전액 처리</td></tr>
+        <tr><td><strong>급여 지급</strong></td><td>워크위드가 급여 산정 및 지급</td></tr>
+        <tr><td><strong>인력 교체</strong></td><td>부적합 인력 즉시 교체, 대체 인력 투입</td></tr>
+        <tr><td><strong>노무 관리</strong></td><td>퇴직금, 연차, 각종 수당 등 법정 의무 이행</td></tr>
+      </tbody>
+    </table>
+
+    <div class="page-break"></div>
+    <h2>6. 구인 능력</h2>
+    <div class="info-box">
+      <strong>워크위드 채용 역량 요약</strong><br>
+      &#x2714; 자체 채용 네트워크 보유 (구인 플랫폼, DB, 소개 등)<br>
+      &#x2714; 내국인 + 외국인(E-9, H-2 등) 근로자 풀 확보<br>
+      &#x2714; 평균 충원 기간: <strong>7일 이내</strong><br>
+      &#x2714; 대량 채용 경험: 시즌 <strong>300명 이상</strong> 동시 운영 실적
+    </div>
+  `;
+}
+
+// ===== 채용대행 Body =====
+function getRecruitBody(v) {
+  return `
+    <h2>3. 채용대행 서비스 개요</h2>
+    <h3>채용대행이란?</h3>
+    <p>워크위드가 고객사를 대신하여 <strong>채용 전 과정</strong>을 수행합니다. 공고 게시부터 서류 스크리닝, 면접 조율, 최종 합격 통보까지 원스톱으로 진행됩니다.</p>
+    <div class="info-box">
+      <strong>채용대행의 장점</strong><br>
+      &#x2714; 채용 성공 시에만 수수료 발생 — 리스크 제로<br>
+      &#x2714; 전문 리크루터의 체계적 스크리닝<br>
+      &#x2714; 고객사 인사팀 업무 부담 경감<br>
+      &#x2714; 비공개 채용 가능 — 기밀 유지
+    </div>
+
+    <h3>직접 채용 vs 채용대행 비교</h3>
+    <table class="compare-table">
+      <thead><tr><th>구분</th><th>직접 채용</th><th>워크위드 채용대행</th></tr></thead>
+      <tbody>
+        <tr><td><strong>공고·광고비</strong></td><td class="danger-cell">고객사 선투자 필요</td><td class="highlight-cell">워크위드 부담</td></tr>
+        <tr><td><strong>스크리닝</strong></td><td class="danger-cell">인사팀 직접 수행</td><td class="highlight-cell">전문 리크루터 수행</td></tr>
+        <tr><td><strong>면접 조율</strong></td><td class="danger-cell">직접 일정 조율</td><td class="highlight-cell">워크위드가 조율</td></tr>
+        <tr><td><strong>비용 발생 시점</strong></td><td class="danger-cell">공고 즉시 비용</td><td class="highlight-cell">채용 성공 시에만</td></tr>
+        <tr><td><strong>채용 실패 시</strong></td><td class="danger-cell">비용 회수 불가</td><td class="highlight-cell">비용 없음</td></tr>
+        <tr><td><strong>보장 기간</strong></td><td>-</td><td class="highlight-cell">3개월 이내 퇴사 시 무료 재채용</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. 채용대행 프로세스</h2>
+    <div class="flow-chart">
+      <div><div class="flow-box ww-box">요건 분석</div><div class="flow-label">1단계</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box ww-box">모집·탐색</div><div class="flow-label">2단계</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box ww-box">스크리닝</div><div class="flow-label">3단계</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box ww-box">면접 조율</div><div class="flow-label">4단계</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box client-box">최종 선발</div><div class="flow-label">5단계</div></div>
+    </div>
+    <table class="compare-table" style="margin-top:24px;">
+      <thead><tr><th>단계</th><th>내용</th><th>소요 기간</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1. 요건 분석</strong></td><td>채용 포지션, 자격요건, 우대사항 등 상세 협의</td><td>1~2일</td></tr>
+        <tr><td><strong>2. 모집·탐색</strong></td><td>공고 게시, DB 서칭, 헤드헌팅</td><td>3~7일</td></tr>
+        <tr><td><strong>3. 스크리닝</strong></td><td>서류 검토, 전화 인터뷰, 적합도 평가</td><td>3~5일</td></tr>
+        <tr><td><strong>4. 면접 조율</strong></td><td>후보자 추천, 면접 일정 조율</td><td>2~3일</td></tr>
+        <tr><td><strong>5. 최종 선발</strong></td><td>고객사 면접 후 최종 합격 통보</td><td>고객사 결정</td></tr>
+      </tbody>
+    </table>
+
+    <h2>5. 수수료 구조</h2>
+    <div class="success-box">
+      <strong>성공 보수제:</strong> 채용이 확정된 인원에 대해서만 수수료가 발생합니다.<br>
+      &#x2714; 채용 성공 전까지 비용 없음<br>
+      &#x2714; 3개월 이내 퇴사 시 무료 재채용 또는 수수료 반환<br>
+      &#x2714; 수수료: 연봉의 일정 비율 (포지션별 협의)
+    </div>
+
+    <div class="page-break"></div>
+    <h2>6. 구인 능력</h2>
+    <div class="info-box">
+      <strong>워크위드 채용 역량 요약</strong><br>
+      &#x2714; 자체 채용 네트워크 보유 (구인 플랫폼, DB, 소개 등)<br>
+      &#x2714; 다양한 직군 채용 경험 (생산직, 사무직, 전문직)<br>
+      &#x2714; 평균 추천까지 소요 기간: <strong>7~14일</strong><br>
+      &#x2714; 연간 <strong>500명 이상</strong> 채용 실적
+    </div>
+  `;
+}
+
+// ===== 콜센터 전담 Body =====
+function getCallcenterBody(v) {
+  const clientLabel = escHtml(v.clientName || '고객사');
+  return `
+    <h2>3. 콜센터 전담 운영이란?</h2>
+    <p><strong>콜센터 전담 운영</strong>은 귀사 전용 상담팀을 구성하여, 워크위드가 팀 운영 전반을 책임지는 서비스입니다. 상담원 채용, 교육, 품질관리, 성과 관리까지 일괄 수행합니다.</p>
+    <div class="info-box">
+      <strong>콜센터 전담의 장점</strong><br>
+      &#x2714; 귀사 전용 상담팀 — 브랜드 전문성 확보<br>
+      &#x2714; 상담원 채용·교육·관리 일체 위탁<br>
+      &#x2714; KPI 기반 품질 관리 (응답률, 해결률, CS 점수)<br>
+      &#x2714; 대규모 콜 처리에 최적화 (인바운드/아웃바운드)
+    </div>
+
+    <h3>자체 운영 vs 전담 위탁 비교</h3>
+    <table class="compare-table">
+      <thead><tr><th>구분</th><th>자체 콜센터 운영</th><th>워크위드 전담 운영</th></tr></thead>
+      <tbody>
+        <tr><td><strong>초기 투자</strong></td><td class="danger-cell">시설, 장비, 시스템 구축 필요</td><td class="highlight-cell">워크위드 인프라 활용</td></tr>
+        <tr><td><strong>상담원 채용</strong></td><td class="danger-cell">직접 채용·교육 부담</td><td class="highlight-cell">워크위드가 채용·교육</td></tr>
+        <tr><td><strong>이직 대응</strong></td><td class="danger-cell">인력 공백 리스크</td><td class="highlight-cell">즉시 대체 인력 투입</td></tr>
+        <tr><td><strong>품질 관리</strong></td><td class="danger-cell">QA 체계 자체 구축</td><td class="highlight-cell">전문 QA 모니터링</td></tr>
+        <tr><td><strong>확장·축소</strong></td><td class="danger-cell">고정비 부담</td><td class="highlight-cell">시즌별 유연한 인원 조정</td></tr>
+        <tr><td><strong>4대보험</strong></td><td class="danger-cell">직접 처리</td><td class="highlight-cell">워크위드 전액 처리</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. 전담 운영 구조</h2>
+    <div class="flow-chart">
+      <div><div class="flow-box client-box">${clientLabel}</div><div class="flow-label">업무 지침 전달</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box ww-box">워크위드<br>센터장/QA</div><div class="flow-label">운영·품질관리</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box worker-box">전담 상담팀</div><div class="flow-label">상담 수행</div></div>
+    </div>
+    <table class="compare-table" style="margin-top:24px;">
+      <thead><tr><th>영역</th><th>내용</th></tr></thead>
+      <tbody>
+        <tr><td><strong>상담원 채용</strong></td><td>경력 상담원 우선 배치, 신규 채용 시 사전 교육 후 투입</td></tr>
+        <tr><td><strong>교육·훈련</strong></td><td>귀사 제품/서비스 교육, 스크립트 작성, 롤플레이</td></tr>
+        <tr><td><strong>품질 관리</strong></td><td>통화 모니터링, QA 평가, 월간 CS 리포트</td></tr>
+        <tr><td><strong>성과 관리</strong></td><td>응답률, 해결률, 상담 시간 등 KPI 관리</td></tr>
+        <tr><td><strong>시스템</strong></td><td>CTI, ARS, CRM 등 콜센터 인프라 제공 가능</td></tr>
+        <tr><td><strong>리포팅</strong></td><td>일일/주간/월간 운영 리포트 제공</td></tr>
+      </tbody>
+    </table>
+
+    <h3>4대보험 전원 가입</h3>
+    <div class="success-box">
+      <strong>워크위드는 전 상담원 4대보험 가입, 정식 근로계약 체결을 원칙으로 합니다.</strong><br>
+      3.3% 사업소득 처리 업체와 달리, 법적 리스크 없는 안정적 운영을 보장합니다.
+    </div>
+
+    <div class="page-break"></div>
+    <h2>5. 구인 능력</h2>
+    <div class="info-box">
+      <strong>워크위드 콜센터 인력 역량</strong><br>
+      &#x2714; 경력 상담원 DB 보유 (인바운드/아웃바운드)<br>
+      &#x2714; 평균 팀 구성 기간: <strong>2주 이내</strong><br>
+      &#x2714; 다국어 상담 가능 (한국어, 영어, 중국어)<br>
+      &#x2714; 동시 운영 가능 규모: <strong>100석 이상</strong>
+    </div>
+  `;
+}
+
+// ===== CS 쉐어링 Body =====
+function getCsShareBody(v) {
+  const clientLabel = escHtml(v.clientName || '고객사');
+  return `
+    <h2>3. CS 쉐어링이란?</h2>
+    <p><strong>CS 쉐어링</strong>은 복수 고객사의 상담 업무를 워크위드의 <strong>공유 상담원</strong>이 처리하는 모델입니다. 전담팀 구성 대비 비용을 대폭 절감하면서도 전문적인 CS 품질을 유지합니다.</p>
+    <div class="info-box">
+      <strong>CS 쉐어링의 장점</strong><br>
+      &#x2714; 전담 대비 <strong>50~70% 비용 절감</strong><br>
+      &#x2714; 소규모 콜에도 전문 상담 품질 제공<br>
+      &#x2714; 콜 증가 시 유연하게 확장 가능<br>
+      &#x2714; 즉시 도입 가능 — 별도 인프라 불필요
+    </div>
+
+    <h3>콜센터 전담 vs CS 쉐어링 비교</h3>
+    <table class="compare-table">
+      <thead><tr><th>구분</th><th>콜센터 전담</th><th>CS 쉐어링</th></tr></thead>
+      <tbody>
+        <tr><td><strong>상담원 배치</strong></td><td>귀사 전용팀</td><td>공유 상담원 (시간 분배)</td></tr>
+        <tr><td><strong>적합 규모</strong></td><td class="highlight-cell">일 100콜 이상</td><td class="highlight-cell">일 10~100콜</td></tr>
+        <tr><td><strong>비용 구조</strong></td><td>인원 × 월 단가</td><td class="highlight-cell">시간당 or 건당 과금</td></tr>
+        <tr><td><strong>초기 비용</strong></td><td>팀 구성 비용</td><td class="highlight-cell">거의 없음</td></tr>
+        <tr><td><strong>전문성</strong></td><td class="highlight-cell">높음 (전용 교육)</td><td>양호 (스크립트 기반)</td></tr>
+        <tr><td><strong>도입 기간</strong></td><td>2~3주</td><td class="highlight-cell">3~5일</td></tr>
+        <tr><td><strong>확장성</strong></td><td>인원 충원 필요</td><td class="highlight-cell">즉시 확장 가능</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. CS 쉐어링 운영 구조</h2>
+    <div class="flow-chart">
+      <div><div class="flow-box client-box">${clientLabel}</div><div class="flow-label">스크립트·지침</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box ww-box">워크위드<br>CS운영팀</div><div class="flow-label">배분·품질관리</div></div>
+      <div class="flow-arrow">&#x27A1;</div>
+      <div><div class="flow-box worker-box">공유 상담원</div><div class="flow-label">상담 수행</div></div>
+    </div>
+    <table class="compare-table" style="margin-top:24px;">
+      <thead><tr><th>영역</th><th>내용</th></tr></thead>
+      <tbody>
+        <tr><td><strong>상담 스크립트</strong></td><td>귀사 맞춤 스크립트 작성, 정기 업데이트</td></tr>
+        <tr><td><strong>상담 채널</strong></td><td>전화, 카카오톡, 이메일, 채팅 등 멀티채널 지원</td></tr>
+        <tr><td><strong>운영 시간</strong></td><td>평일 09~18시 기본, 야간·주말 확장 가능</td></tr>
+        <tr><td><strong>리포팅</strong></td><td>주간/월간 상담 현황 리포트 (콜 수, 유형, 해결률)</td></tr>
+        <tr><td><strong>확장</strong></td><td>콜 증가 시 상담원 추가 배정 (당일 가능)</td></tr>
+      </tbody>
+    </table>
+
+    <h2>5. 과금 구조</h2>
+    <div class="success-box">
+      <strong>유연한 과금 방식</strong><br>
+      &#x2714; <strong>시간제:</strong> 상담원 투입 시간 기준 과금 (소규모 추천)<br>
+      &#x2714; <strong>건당제:</strong> 상담 건수 기준 과금 (콜 변동이 큰 경우 추천)<br>
+      &#x2714; <strong>월정액:</strong> 기본 시간 + 초과분 과금 (안정적 운영 추천)<br>
+      ※ 과금 방식은 고객사 상황에 맞춰 협의 가능합니다.
+    </div>
+  `;
+}
+
+// ===== Common: Quote Section (유형별 분리) =====
+function getQuoteHTML(type, v) {
+  const cfg = SERVICE_CONFIG[type];
+  const sectionNum = (type === 'dogup' || type === 'dispatch' || type === 'recruit') ? '7' : '6';
+
+  if (cfg.quoteType === 'personnel') {
+    return getQuotePersonnel(sectionNum, cfg, v);
+  } else if (cfg.quoteType === 'feeRate') {
+    return getQuoteFeeRate(sectionNum, v);
+  } else if (cfg.quoteType === 'tiered') {
+    return getQuoteTiered(sectionNum, v);
+  } else if (cfg.quoteType === 'callBased') {
+    return getQuoteCallBased(sectionNum, v);
+  }
+  return '';
+}
+
+// 요율 읽기 (0 입력 허용)
+function rateVal(id, def) {
+  const el = document.getElementById(id);
+  if (!el) return def;
+  const v = parseFloat(el.value);
+  return isNaN(v) ? def : v;
+}
+
+function calcPersonnel(v) {
+  const workers = parseNumber(v.pWorkers) || parseNumber(v.workerCount);
+  const hourly = parseNumber(v.pHourly) || 10500;
+  const baseWage = hourly * 209; // 시급×209시간
+  const transport = parseNumber(v.pTransport);
+  const nightPay = parseNumber(v.pNightPay);
+  const laborSub1 = baseWage + transport + nightPay; // ① 직접노무비
+
+  // 연차수당
+  const alMode = v.pAnnualLeaveMode || 'include';
+  const annualLeaveCalc = hourly * 8; // 통상시급×8h
+  const annualLeave = alMode === 'include' ? annualLeaveCalc : 0;
+  const laborSub2 = annualLeave; // ②
+  const laborTotal = laborSub1 + laborSub2; // ③ = ①+②
+
+  // 4대보험 개별 계산
+  const rPension = rateVal('ratePension', 4.5) / 100;
+  const rHealth = rateVal('rateHealth', 3.545) / 100;
+  const rLongCare = rateVal('rateLongCare', 13.14) / 100;
+  const rEmploy = rateVal('rateEmploy', 0.9) / 100;
+  const rIndust = rateVal('rateIndust', 1.5) / 100;
+  const rBizTax = rateVal('rateBizTax', 0.5) / 100;
+  const rRetire = rateVal('rateRetire', 8.33) / 100;
+
+  const pension = Math.round(baseWage * rPension);
+  const health = Math.round(baseWage * rHealth);
+  const longCareAmt = Math.round(health * rLongCare);
+  const employ = Math.round(baseWage * rEmploy);
+  const indust = Math.round(baseWage * rIndust);
+  const bizTaxAmt = Math.round(baseWage * rBizTax);
+  const insuranceTotal = pension + health + longCareAmt + employ + indust + bizTaxAmt; // ④
+
+  const subtotal = laborTotal + insuranceTotal; // ⑤ = ③+④
+  const retire = Math.round(baseWage * rRetire); // 퇴직금 (발생시 청구)
+
+  // 관리수수료
+  const mgmtRate = parseFloat(v.pMgmtRate) || 8;
+  const mgmtAmount = Math.round(subtotal * mgmtRate / 100);
+  const perPerson = subtotal + mgmtAmount; // 1인 단가
+
+  // 직책수당, 기타비용
+  const leaderPay = parseNumber(v.pLeaderPay);
+  const etcCost = parseNumber(v.pEtcCost);
+
+  // 월 합계 = 1인단가×인원 + 기타비용 (직책수당은 1인단가에 미포함, 월 총액에 별도)
+  const monthlyTotal = perPerson * workers + leaderPay + etcCost;
+
+  return {
+    workers, hourly, baseWage, transport, nightPay,
+    laborSub1, annualLeaveCalc, annualLeave, alMode, laborSub2, laborTotal,
+    rPension, rHealth, rLongCare, rEmploy, rIndust, rBizTax, rRetire,
+    pension, health, longCareAmt, employ, indust, bizTaxAmt, insuranceTotal,
+    subtotal, retire,
+    mgmtRate, mgmtAmount, perPerson,
+    leaderPay, etcCost, monthlyTotal
+  };
+}
+
+function getQuotePersonnel(sectionNum, cfg, v) {
+  const c = calcPersonnel(v);
+  if (!c.workers) {
+    return `
+      <h2>${sectionNum}. 운영 예산안</h2>
+      <p style="color:var(--gray-500);">좌측에서 인원과 시급을 입력하세요</p>
+    `;
+  }
+
+  return `
+    <h2>${sectionNum}. 운영 예산안 <span style="font-size:0.7rem;font-weight:400;color:var(--gray-500);">(적용시급: ${numberWithCommas(c.hourly)}원) (단위: 원)</span></h2>
+    <div class="budget-block">
+    <table class="quote-table budget-table">
+      <thead><tr><th style="text-align:left;">계정과목</th><th style="text-align:left;">세부내용</th><th>산출내역</th><th style="text-align:right;">합계</th></tr></thead>
+      <tbody>
+        <tr><td style="text-align:left;"><strong>직접노무비</strong></td><td>기본급</td><td>적용시급×209시간</td><td style="text-align:right;">${numberWithCommas(c.baseWage)}</td></tr>
+        ${c.transport > 0 ? `<tr><td></td><td>교통비</td><td></td><td style="text-align:right;">${numberWithCommas(c.transport)}</td></tr>` : ''}
+        ${c.nightPay > 0 ? `<tr><td></td><td>야간수당</td><td></td><td style="text-align:right;">${numberWithCommas(c.nightPay)}</td></tr>` : ''}
+        <tr style="border-top:1px solid var(--gray-300);"><td></td><td><strong>① 소계</strong></td><td></td><td style="text-align:right;font-weight:600;">${numberWithCommas(c.laborSub1)}</td></tr>
+        <tr><td></td><td>퇴직금</td><td>${(c.rRetire * 100).toFixed(2)}%</td><td style="text-align:right;color:var(--gray-500);">발생시 청구</td></tr>
+        ${c.alMode === 'include' ? `<tr><td></td><td>연차수당</td><td>통상시급×8시간</td><td style="text-align:right;">${numberWithCommas(c.annualLeaveCalc)}</td></tr>` : ''}
+        ${c.alMode === 'ondemand' ? `<tr><td></td><td>연차수당</td><td>통상시급×8시간</td><td style="text-align:right;color:var(--gray-500);">발생시 청구</td></tr>` : ''}
+        <tr style="border-top:1px solid var(--gray-300);"><td></td><td><strong>② 소계</strong></td><td></td><td style="text-align:right;font-weight:600;">${numberWithCommas(c.laborSub2)}</td></tr>
+        <tr class="subtotal-row" style="background:var(--blue-light);"><td colspan="2" style="text-align:left;"><strong>③ 합계 (①+②)</strong></td><td></td><td style="text-align:right;font-weight:700;">${numberWithCommas(c.laborTotal)}</td></tr>
+        <tr><td style="text-align:left;"><strong>간접노무비</strong></td><td>국민연금</td><td>임금×${(c.rPension * 100).toFixed(2)}%</td><td style="text-align:right;">${numberWithCommas(c.pension)}</td></tr>
+        <tr><td style="text-align:left;color:var(--gray-500);font-size:0.7rem;">(4대보험)</td><td>건강보험</td><td>임금×${(c.rHealth * 100).toFixed(3)}%</td><td style="text-align:right;">${numberWithCommas(c.health)}</td></tr>
+        <tr><td></td><td>장기요양보험</td><td>건강보험료×${(c.rLongCare * 100).toFixed(2)}%</td><td style="text-align:right;">${numberWithCommas(c.longCareAmt)}</td></tr>
+        <tr><td></td><td>고용보험</td><td>임금×${(c.rEmploy * 100).toFixed(2)}%</td><td style="text-align:right;">${numberWithCommas(c.employ)}</td></tr>
+        <tr><td></td><td>산재보험</td><td>임금×${(c.rIndust * 100).toFixed(3)}%</td><td style="text-align:right;">${numberWithCommas(c.indust)}</td></tr>
+        <tr><td></td><td>사업소세</td><td>임금×${(c.rBizTax * 100).toFixed(1)}%</td><td style="text-align:right;">${numberWithCommas(c.bizTaxAmt)}</td></tr>
+        <tr style="border-top:1px solid var(--gray-300);"><td></td><td><strong>④ 소계</strong></td><td></td><td style="text-align:right;font-weight:600;">${numberWithCommas(c.insuranceTotal)}</td></tr>
+        <tr class="subtotal-row" style="background:var(--blue-light);"><td colspan="2" style="text-align:left;"><strong>⑤ 합계 (③+④)</strong></td><td></td><td style="text-align:right;font-weight:700;">${numberWithCommas(c.subtotal)}</td></tr>
+        <tr><td style="text-align:left;"><strong>수수료</strong></td><td>관리 수수료<br><span style="font-size:0.65rem;color:var(--gray-500);line-height:1.3;">채용 광고비, 급여/4대보험 행정대행,<br>부당해고 등 노무 자문 및 리스크 관리,<br>결원 대응비, 근로자 복리후생비 등<br>제반 간접비 포함</span></td><td>${c.mgmtRate}%</td><td style="text-align:right;">${numberWithCommas(c.mgmtAmount)}</td></tr>
+      </tbody>
+      <tfoot>
+        <tr class="total-row" style="background:var(--navy);color:var(--white);"><td colspan="2" style="text-align:left;"><strong>1인 단가 (VAT 별도)</strong></td><td></td><td style="text-align:right;font-weight:700;">${numberWithCommas(c.perPerson)}</td></tr>
+      </tfoot>
+    </table>
+    </div>
+
+    <table class="quote-table budget-table" style="margin-top:16px;">
+      <thead><tr><th style="text-align:left;">항목</th><th>산출내역</th><th style="text-align:right;">금액</th></tr></thead>
+      <tbody>
+        <tr><td style="text-align:left;">인건비 (${c.workers}명)</td><td>${numberWithCommas(c.perPerson)}원 × ${c.workers}명</td><td style="text-align:right;">${numberWithCommas(c.perPerson * c.workers)}</td></tr>
+        ${c.leaderPay > 0 ? `<tr><td style="text-align:left;">직책수당 (현장관리자)</td><td></td><td style="text-align:right;">${numberWithCommas(c.leaderPay)}</td></tr>` : ''}
+        ${c.etcCost > 0 ? `<tr><td style="text-align:left;">기타비용</td><td>유니폼 / 교육 / 채용 등</td><td style="text-align:right;">${numberWithCommas(c.etcCost)}</td></tr>` : ''}
+      </tbody>
+      <tfoot>
+        <tr class="total-row" style="background:var(--navy);color:var(--white);"><td style="text-align:left;"><strong>월 청구 예상액 (VAT 별도)</strong></td><td></td><td style="text-align:right;font-weight:700;font-size:1rem;">${numberWithCommas(c.monthlyTotal)}</td></tr>
+      </tfoot>
+    </table>
+
+    <p style="text-align:right;font-size:0.72rem;color:var(--gray-500);margin-top:6px;">
+      * 최저시급 및 4대보험은 당해연도 법정 기준을 반영함.<br>
+      * 근로기준법에 의거한 연장, 심야, 휴일근무 수당 및 퇴직금 등은 발생 시 별도 청구함.<br>
+      * 상기 금액은 VAT 별도 기준이며, 실제 금액은 협의에 따라 변동될 수 있음.
+    </p>
+  `;
+}
+
+function getQuoteFeeRate(sectionNum, v) {
+  const count = parseNumber(v.recruitCount) || parseNumber(v.workerCount);
+  const salary = parseNumber(v.recruitSalary);
+  const rate = parseFloat(v.recruitFeeRate) || 8;
+  const feePerPerson = Math.round(salary * rate / 100);
+  const totalFee = feePerPerson * count;
+  return `
+    <h2>${sectionNum}. 수수료 견적</h2>
+    <table class="quote-table">
+      <thead><tr><th>항목</th><th>채용 인원</th><th>예상 연봉</th><th>수수료율</th><th>수수료</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>채용대행</td>
+          <td>${count ? count + '명' : '-'}</td>
+          <td>${salary ? numberWithCommas(salary) + '원' : '-'}</td>
+          <td>${rate}%</td>
+          <td>${totalFee ? numberWithCommas(totalFee) + '원' : '-'}</td>
+        </tr>
+        <tr>
+          <td><strong>총 수수료</strong></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td class="amount">${totalFee ? numberWithCommas(totalFee) + '원' : '-'}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="text-align:right;font-size:0.8rem;color:var(--gray-500);">
+      * 채용 성공 시에만 수수료 발생 (성공보수제)<br>
+      * 3개월 이내 퇴사 시 무료 재채용 또는 수수료 환불<br>
+      * VAT 별도
+    </p>
+  `;
+}
+
+function getQuoteTiered(sectionNum, v) {
+  const tiers = [
+    { label: '팀장', count: parseNumber(v.ccLeader), pay: parseNumber(v.ccLeaderPay) || 3800000 },
+    { label: '선임', count: parseNumber(v.ccSenior), pay: parseNumber(v.ccSeniorPay) || 3200000 },
+    { label: '일반', count: parseNumber(v.ccJunior), pay: parseNumber(v.ccJuniorPay) || 2900000 },
+    { label: '단기', count: parseNumber(v.ccTemp), pay: parseNumber(v.ccTempPay) || 2500000 },
+  ];
+  const totalPersonnel = tiers.reduce((s, t) => s + t.count, 0);
+  const laborCost = tiers.reduce((s, t) => s + (t.count * t.pay), 0);
+  const asp = parseNumber(v.ccASP) || 350000;
+  const aspTotal = totalPersonnel * asp;
+  const mgmtRate = parseFloat(v.ccMgmtFee) || 8;
+  const mgmtAmount = Math.round(laborCost * mgmtRate / 100);
+  const total = laborCost + aspTotal + mgmtAmount;
+
+  let rows = '';
+  tiers.forEach(t => {
+    if (t.count > 0) {
+      rows += `<tr><td>${t.label}</td><td>${t.count}명</td><td>${numberWithCommas(t.pay)}원</td><td>${numberWithCommas(t.count * t.pay)}원</td></tr>`;
+    }
+  });
+  if (!rows) rows = '<tr><td colspan="4" style="color:var(--gray-500);">좌측에서 인원을 입력하세요</td></tr>';
+
+  return `
+    <h2>${sectionNum}. 견적 요약</h2>
+    <table class="quote-table">
+      <thead><tr><th>항목</th><th>인원</th><th>월 단가</th><th>금액 (월)</th></tr></thead>
+      <tbody>
+        ${rows}
+        ${totalPersonnel > 0 ? `<tr><td>ASP (좌석료)</td><td>${totalPersonnel}명</td><td>${numberWithCommas(asp)}원</td><td>${numberWithCommas(aspTotal)}원</td></tr>` : ''}
+        ${laborCost > 0 ? `<tr><td>관리수수료</td><td colspan="2">${mgmtRate}%</td><td>${numberWithCommas(mgmtAmount)}원</td></tr>` : ''}
+        <tr>
+          <td><strong>월 합계</strong></td>
+          <td></td>
+          <td></td>
+          <td class="amount">${total ? numberWithCommas(total) + '원' : '-'}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="text-align:right;font-size:0.8rem;color:var(--gray-500);">* 상기 금액은 VAT 별도 기준입니다.<br>* 실제 금액은 협의에 따라 변동될 수 있습니다.</p>
+  `;
+}
+
+function getQuoteCallBased(sectionNum, v) {
+  const isCustom = v.csCustomMode === true || v.csCustomMode === 'true';
+  let html = `<h2>${sectionNum}. 견적 요약</h2>`;
+
+  if (isCustom) {
+    const baseFee = parseNumber(v.csBaseFee);
+    const perCall = parseNumber(v.csPerCall);
+    const extraCalls = parseNumber(v.csExtraCalls);
+    const extraCost = perCall * extraCalls;
+    const total = baseFee + extraCost;
+    html += `
+      <table class="quote-table">
+        <thead><tr><th>항목</th><th>내용</th><th>월 금액</th></tr></thead>
+        <tbody>
+          <tr><td>기본료</td><td>월정액</td><td>${baseFee ? numberWithCommas(baseFee) + '원' : '-'}</td></tr>
+          ${extraCalls > 0 ? `<tr><td>초과 콜</td><td>${numberWithCommas(extraCalls)}건 × ${perCall ? numberWithCommas(perCall) : '0'}원</td><td>${numberWithCommas(extraCost)}원</td></tr>` : ''}
+          <tr><td><strong>월 합계</strong></td><td></td><td class="amount">${total ? numberWithCommas(total) + '원' : '-'}</td></tr>
+        </tbody>
+      </table>
+    `;
+  } else {
+    const tierIdx = parseInt(v.csCallTier) || 0;
+    const tier = CS_SHARE_TIERS[tierIdx] || CS_SHARE_TIERS[0];
+    html += `
+      <table class="quote-table">
+        <thead><tr><th>항목</th><th>내용</th><th>월 금액</th></tr></thead>
+        <tbody>
+          <tr><td>CS 쉐어링</td><td>${tier.label} 기준</td><td>${numberWithCommas(tier.monthly)}원</td></tr>
+          <tr><td><strong>월 합계</strong></td><td></td><td class="amount">${numberWithCommas(tier.monthly)}원</td></tr>
+        </tbody>
+      </table>
+    `;
+  }
+
+  html += `
+    <p style="text-align:right;font-size:0.8rem;color:var(--gray-500);">
+      * 초기 구축비 무료<br>
+      * 운영시간: 평일 09:00~18:00 (야간/주말 확장 가능)<br>
+      * VAT 별도
+    </p>
+  `;
+  return html;
+}
+
+// ===== Common: Reference Section =====
+function getRefHTML(type) {
+  const showRef = document.getElementById('showRef');
+  if (showRef && !showRef.checked) return '';
+
+  const sectionNum = type === 'dogup' ? '8' : type === 'dispatch' ? '8' : type === 'recruit' ? '8' : type === 'callcenter' ? '7' : '7';
+  const serviceLabel = type === 'dogup' ? '도급' : type === 'dispatch' ? '파견' : type === 'recruit' ? '채용대행' : type === 'callcenter' ? '콜센터' : 'CS';
+  return `
+    <h2>${sectionNum}. 주요 레퍼런스</h2>
+    <p>워크위드는 다양한 업종의 고객사와 함께 성공적인 ${serviceLabel} 운영 실적을 보유하고 있습니다.</p>
+    <table class="ref-table">
+      <thead><tr><th>No.</th><th>업체명</th><th>업종</th><th>운영 인원</th><th>운영 기간</th></tr></thead>
+      <tbody id="refTableBody">
+        <tr><td colspan="5" style="text-align:center;color:var(--gray-500);">좌측에서 거래처를 입력하세요</td></tr>
+      </tbody>
+    </table>
+  `;
+}
+
+// ===== Common: Memo Section =====
+function getMemoHTML(v) {
+  if (v.memo && v.memo.trim()) {
+    return `
+      <div id="memoSection">
+        <h2>추가 사항</h2>
+        <p id="memoContent">${escHtml(v.memo)}</p>
+      </div>
+    `;
+  }
+  return '<div id="memoSection" style="display:none;"><h2>추가 사항</h2><p id="memoContent"></p></div>';
+}
+
+// ===== Common: Footer =====
+function getFooterHTML(type) {
+  const cfg = SERVICE_CONFIG[type];
+  return `
+    <div class="proposal-footer">
+      <div class="company-name">WALKWITH 워크위드</div>
+      <p>본 제안서에 대한 문의사항은 아래로 연락 부탁드립니다.</p>
+      <p>주식회사 워크위드 | ${cfg.dept}</p>
+      <p style="margin-top:8px; font-size:0.9em;">
+        <strong>대표번호</strong> 1600-9798 &nbsp;|&nbsp; <strong>홈페이지</strong> walkwithyou.co.kr
+      </p>
+    </div>
+  `;
+}
+
+// ===== Service Type Change =====
+function onServiceTypeChange() {
+  const type = document.getElementById('serviceType').value;
+  const cfg = SERVICE_CONFIG[type];
+
+  // Update header subtitle
+  document.getElementById('headerSubtitle').textContent = cfg.headerSub;
+
+  // Update service description
+  document.getElementById('serviceDesc').innerHTML = cfg.desc;
+
+  // Update cover
+  document.getElementById('coverTitle').textContent = cfg.title;
+  document.getElementById('coverSubtitle').textContent = cfg.subtitle;
+
+  // 견적 폼 유형별 전환
+  renderQuoteForm(type);
+
+  // Re-render body
+  renderBody();
+  saveData();
+}
+
+// ===== Render Body =====
+function renderBody() {
+  const type = document.getElementById('serviceType').value;
+  const v = getFormValues();
+  document.getElementById('proposalBody').innerHTML = getBodyHTML(type, v);
+  updateDynamicFields(v);
+}
+
+// ===== Update Dynamic Fields (quote, refs, etc.) =====
+function updateDynamicFields(v) {
+  const type = document.getElementById('serviceType').value;
+  const cfg = SERVICE_CONFIG[type];
+  const el = (id) => document.getElementById(id);
+
+  // 사이드바 합계 표시
+  let total = 0;
+  let totalLabel = '월 예상 비용';
+  let totalSuffix = '<small>VAT 별도</small>';
+
+  if (cfg.quoteType === 'personnel') {
+    total = calcPersonnel(v).monthlyTotal;
+  } else if (cfg.quoteType === 'feeRate') {
+    const count = parseNumber(v.recruitCount) || parseNumber(v.workerCount);
+    const salary = parseNumber(v.recruitSalary);
+    const rate = parseFloat(v.recruitFeeRate) || 8;
+    total = Math.round(salary * rate / 100) * count;
+    totalLabel = '총 수수료 예상';
+    totalSuffix = '<small>채용 성공 시에만 발생 · VAT 별도</small>';
+  } else if (cfg.quoteType === 'tiered') {
+    const tiers = [
+      { count: parseNumber(v.ccLeader), pay: parseNumber(v.ccLeaderPay) || 3800000 },
+      { count: parseNumber(v.ccSenior), pay: parseNumber(v.ccSeniorPay) || 3200000 },
+      { count: parseNumber(v.ccJunior), pay: parseNumber(v.ccJuniorPay) || 2900000 },
+      { count: parseNumber(v.ccTemp), pay: parseNumber(v.ccTempPay) || 2500000 },
+    ];
+    const totalPersonnel = tiers.reduce((s, t) => s + t.count, 0);
+    const laborCost = tiers.reduce((s, t) => s + (t.count * t.pay), 0);
+    const asp = parseNumber(v.ccASP) || 350000;
+    const mgmtRate = parseFloat(v.ccMgmtFee) || 8;
+    total = laborCost + (totalPersonnel * asp) + Math.round(laborCost * mgmtRate / 100);
+  } else if (cfg.quoteType === 'callBased') {
+    const isCustom = v.csCustomMode === true || v.csCustomMode === 'true';
+    if (isCustom) {
+      const baseFee = parseNumber(v.csBaseFee);
+      const perCall = parseNumber(v.csPerCall);
+      const extraCalls = parseNumber(v.csExtraCalls);
+      total = baseFee + (perCall * extraCalls);
+    } else {
+      const tierIdx = parseInt(v.csCallTier) || 0;
+      const tier = CS_SHARE_TIERS[tierIdx] || CS_SHARE_TIERS[0];
+      total = tier.monthly;
+    }
+  }
+
+  if (el('quoteTotalDisplay')) {
+    el('quoteTotalDisplay').innerHTML = total
+      ? totalLabel + ': ' + numberWithCommas(total) + '원' + totalSuffix
+      : totalLabel + ': -' + totalSuffix;
+  }
+
+  // References
+  const refs = getRefData();
+  const tbody = el('refTableBody');
+  if (tbody) {
+    if (refs.length === 0 || refs.every(r => !r.company)) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);">좌측에서 거래처를 입력하세요</td></tr>';
+    } else {
+      let html = '';
+      refs.forEach((r, i) => {
+        if (r.company) {
+          html += `<tr><td>${i+1}</td><td>${escHtml(r.company)}</td><td>${escHtml(r.industry||'-')}</td><td>${escHtml(r.count||'-')}</td><td>${escHtml(r.period||'-')}</td></tr>`;
+        }
+      });
+      tbody.innerHTML = html || '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);">좌측에서 거래처를 입력하세요</td></tr>';
+    }
+  }
+}
+
+// ===== Update Preview (called on every input) =====
+function updatePreview() {
+  const v = getFormValues();
+
+  // Cover
+  document.getElementById('coverClient').textContent = v.clientName ? v.clientName + ' 귀사' : '귀사';
+  const dateStr = v.proposalDate ? new Date(v.proposalDate).toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric'}) : new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('coverDate').textContent = dateStr;
+
+  // Re-render body (updates all dynamic content)
+  renderBody();
+}
+
+function getFormValues() {
+  const val = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const chk = (id) => { const el = document.getElementById(id); return el ? el.checked : false; };
+  return {
+    clientName: val('clientName'),
+    clientIndustry: val('clientIndustry'),
+    clientContact: val('clientContact'),
+    workLocation: val('workLocation'),
+    workDescription: val('workDescription'),
+    workerCount: val('workerCount'),
+    workHours: val('workHours'),
+    workShift: val('workShift'),
+    startDate: val('startDate'),
+    contractPeriod: val('contractPeriod'),
+    memo: val('memo'),
+    proposalDate: val('proposalDate'),
+    serviceType: val('serviceType'),
+    // 도급/파견
+    pWorkers: val('pWorkers'),
+    pHourly: val('pHourly'),
+    pTransport: val('pTransport'),
+    pLeaderPay: val('pLeaderPay'),
+    pNightPay: val('pNightPay'),
+    pEtcCost: val('pEtcCost'),
+    pMgmtRate: val('pMgmtRate'),
+    pAnnualLeaveMode: val('pAnnualLeaveMode'),
+    // 요율
+    ratePension: val('ratePension'),
+    rateHealth: val('rateHealth'),
+    rateLongCare: val('rateLongCare'),
+    rateEmploy: val('rateEmploy'),
+    rateIndust: val('rateIndust'),
+    rateRetire: val('rateRetire'),
+    rateBizTax: val('rateBizTax'),
+    // 채용대행
+    recruitCount: val('recruitCount'),
+    recruitSalary: val('recruitSalary'),
+    recruitFeeRate: val('recruitFeeRate'),
+    // 콜센터 전담
+    ccLeader: val('ccLeader'),
+    ccLeaderPay: val('ccLeaderPay'),
+    ccSenior: val('ccSenior'),
+    ccSeniorPay: val('ccSeniorPay'),
+    ccJunior: val('ccJunior'),
+    ccJuniorPay: val('ccJuniorPay'),
+    ccTemp: val('ccTemp'),
+    ccTempPay: val('ccTempPay'),
+    ccASP: val('ccASP'),
+    ccMgmtFee: val('ccMgmtFee'),
+    // CS 쉐어링
+    csCallTier: val('csCallTier'),
+    csCustomMode: chk('csCustomMode'),
+    csBaseFee: val('csBaseFee'),
+    csPerCall: val('csPerCall'),
+    csExtraCalls: val('csExtraCalls'),
+    // 표시 옵션
+    showRef: chk('showRef'),
+  };
+}
+
+function getRefData() {
+  const rows = document.querySelectorAll('.ref-row');
+  const refs = [];
+  rows.forEach(row => {
+    refs.push({
+      company: row.querySelector('.ref-company').value,
+      industry: row.querySelector('.ref-industry').value,
+      count: row.querySelector('.ref-count').value,
+      period: row.querySelector('.ref-period').value,
+    });
+  });
+  return refs;
+}
+
+// ===== localStorage =====
+const STORAGE_KEY = 'workwith_proposal_data';
+
+function saveData() {
+  const data = {
+    form: getFormValues(),
+    refs: getRefData(),
+    savedBy: document.getElementById('savedBy')?.value || '',
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.form) {
+      // 서비스 유형 먼저 복원 → 견적 폼 렌더링
+      const typeEl = document.getElementById('serviceType');
+      if (typeEl && data.form.serviceType) {
+        typeEl.value = data.form.serviceType;
+      }
+      renderQuoteForm(typeEl ? typeEl.value : 'dogup');
+
+      // 나머지 필드 복원
+      Object.keys(data.form).forEach(key => {
+        if (key === 'serviceType') return;
+        if (key === 'csCustomMode' || key === 'showRef') {
+          const el = document.getElementById(key);
+          if (el) el.checked = data.form[key] === true || data.form[key] === 'true';
+          return;
+        }
+        const el = document.getElementById(key);
+        if (el) el.value = data.form[key] || '';
+      });
+
+      // csCustomMode 토글 상태 반영
+      const customEl = document.getElementById('csCustomMode');
+      if (customEl) {
+        const fields = document.getElementById('csCustomFields');
+        const tierSelect = document.getElementById('csCallTier');
+        if (fields) fields.style.display = customEl.checked ? 'block' : 'none';
+        if (tierSelect) tierSelect.disabled = customEl.checked;
+      }
+    }
+    if (data.refs && data.refs.length > 0) {
+      const list = document.getElementById('refList');
+      list.innerHTML = '';
+      data.refs.forEach(r => {
+        const row = document.createElement('div');
+        row.className = 'ref-row';
+        row.innerHTML = `
+          <input type="text" placeholder="업체명" class="ref-company" data-save value="${escHtml(r.company||'')}">
+          <input type="text" placeholder="업종" class="ref-industry" data-save value="${escHtml(r.industry||'')}">
+          <input type="text" placeholder="인원" class="ref-count" data-save style="width:70px;flex:none;" value="${escHtml(r.count||'')}">
+          <input type="text" placeholder="기간" class="ref-period" data-save value="${escHtml(r.period||'')}">
+          <button class="btn-remove" onclick="removeRef(this)" title="삭제">&times;</button>
+        `;
+        list.appendChild(row);
+      });
+    }
+    // 저장자 복원
+    if (data.savedBy) {
+      const el = document.getElementById('savedBy');
+      if (el) el.value = data.savedBy;
+    }
+  } catch(e) {}
+}
+
+function resetForm() {
+  if (!confirm('입력한 데이터를 모두 초기화하시겠습니까?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+// ===== 저장 / 불러오기 =====
+function exportProposal() {
+  const data = {
+    _version: 1,
+    _savedAt: new Date().toISOString(),
+    form: getFormValues(),
+    refs: getRefData(),
+  };
+  const clientName = data.form.clientName || '제안서';
+  const typeLabel = SERVICE_CONFIG[data.form.serviceType]?.title || '제안서';
+  const fileName = clientName + '_' + typeLabel + '_' + new Date().toISOString().slice(0,10) + '.json';
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importProposal(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.form) { alert('올바른 제안서 파일이 아닙니다.'); return; }
+
+      // 서비스 유형 먼저 복원
+      const typeEl = document.getElementById('serviceType');
+      if (typeEl && data.form.serviceType) typeEl.value = data.form.serviceType;
+      renderQuoteForm(typeEl ? typeEl.value : 'dogup');
+
+      // 필드 복원
+      Object.keys(data.form).forEach(key => {
+        if (key === 'serviceType') return;
+        if (key === 'csCustomMode' || key === 'showRef') {
+          const el = document.getElementById(key);
+          if (el) el.checked = data.form[key] === true || data.form[key] === 'true';
+          return;
+        }
+        const el = document.getElementById(key);
+        if (el) el.value = data.form[key] || '';
+      });
+
+      // csCustomMode 토글
+      const customEl = document.getElementById('csCustomMode');
+      if (customEl) {
+        const fields = document.getElementById('csCustomFields');
+        const tierSelect = document.getElementById('csCallTier');
+        if (fields) fields.style.display = customEl.checked ? 'block' : 'none';
+        if (tierSelect) tierSelect.disabled = customEl.checked;
+      }
+
+      // 레퍼런스 복원
+      if (data.refs && data.refs.length > 0) {
+        const list = document.getElementById('refList');
+        list.innerHTML = '';
+        data.refs.forEach(r => {
+          const row = document.createElement('div');
+          row.className = 'ref-row';
+          row.innerHTML = '<input type="text" placeholder="업체명" class="ref-company" data-save value="' + escHtml(r.company||'') + '">'
+            + '<input type="text" placeholder="업종" class="ref-industry" data-save value="' + escHtml(r.industry||'') + '">'
+            + '<input type="text" placeholder="인원" class="ref-count" data-save style="width:70px;flex:none;" value="' + escHtml(r.count||'') + '">'
+            + '<input type="text" placeholder="기간" class="ref-period" data-save value="' + escHtml(r.period||'') + '">'
+            + '<button class="btn-remove" onclick="removeRef(this)" title="삭제">&times;</button>';
+          list.appendChild(row);
+        });
+      }
+
+      onServiceTypeChange();
+      bindInputListeners();
+      updatePreview();
+      saveData();
+      alert('불러오기 완료: ' + (data.form.clientName || '제안서'));
+    } catch(err) {
+      alert('파일을 읽을 수 없습니다: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset file input
+}
+
+// ===== Cloud (Google Sheets — JSONP) =====
+const SERVICE_LABELS = { dogup:'도급', dispatch:'파견', recruit:'채용대행', callcenter:'콜센터', csshare:'CS쉐어링' };
+
+// JSONP 호출 (file:// 에서도 동작)
+function callScript(params) {
+  return new Promise(function(resolve, reject) {
+    var cbName = '_gcb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    var timeout = setTimeout(function() {
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      reject(new Error('요청 시간 초과'));
+    }, 30000);
+
+    window[cbName] = function(result) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      resolve(result);
+    };
+
+    var url = SCRIPT_URL + '?' + params + '&callback=' + cbName;
+    var script = document.createElement('script');
+    script.src = url;
+    script.onerror = function() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      reject(new Error('서버 연결 실패'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+async function saveToSheet() {
+  if (!SCRIPT_URL) {
+    alert('Apps Script URL이 설정되지 않았습니다.\n관리자에게 문의하세요.');
+    return;
+  }
+  var savedBy = document.getElementById('savedBy') ? document.getElementById('savedBy').value.trim() : '미지정';
+  if (!savedBy) savedBy = '미지정';
+  var data = JSON.stringify({ form: getFormValues(), refs: getRefData() });
+  var params = 'action=save&savedBy=' + encodeURIComponent(savedBy)
+    + '&data=' + encodeURIComponent(data);
+  if (currentCloudId) params += '&id=' + encodeURIComponent(currentCloudId);
+
+  try {
+    var result = await callScript(params);
+    if (result.success) {
+      currentCloudId = result.id;
+      alert('클라우드에 저장되었습니다. (' + result.savedAt + ')');
+    } else {
+      alert('저장 실패: ' + (result.error || '알 수 없는 오류'));
+    }
+  } catch (err) {
+    alert('오류: ' + err.message);
+  }
+}
+
+function openCloudModal() {
+  if (!SCRIPT_URL) {
+    alert('Apps Script URL이 설정되지 않았습니다.\n관리자에게 문의하세요.');
+    return;
+  }
+  document.getElementById('cloudOverlay').classList.add('open');
+  document.getElementById('cloudModalBody').innerHTML = '<div class="cloud-loading">불러오는 중...</div>';
+  loadCloudList();
+}
+
+function closeCloudModal() {
+  document.getElementById('cloudOverlay').classList.remove('open');
+}
+
+async function loadCloudList() {
+  try {
+    var result = await callScript('action=list');
+    if (!result.success) {
+      document.getElementById('cloudModalBody').innerHTML = '<div class="cloud-empty">오류: ' + (result.error || '') + '</div>';
+      return;
+    }
+    if (!result.list || result.list.length === 0) {
+      document.getElementById('cloudModalBody').innerHTML = '<div class="cloud-empty">저장된 제안서가 없습니다.</div>';
+      return;
+    }
+    var html = '<table class="cloud-table"><thead><tr><th>고객명</th><th>유형</th><th>저장일</th><th>저장자</th><th></th></tr></thead><tbody>';
+    result.list.forEach(function(item) {
+      var typeLabel = SERVICE_LABELS[item.serviceType] || item.serviceType || '-';
+      var dateShort = item.savedAt ? String(item.savedAt).slice(5) : '-';
+      html += '<tr>'
+        + '<td>' + escHtml(item.clientName || '미지정') + '</td>'
+        + '<td>' + escHtml(typeLabel) + '</td>'
+        + '<td>' + escHtml(dateShort) + '</td>'
+        + '<td>' + escHtml(item.savedBy || '-') + '</td>'
+        + '<td class="cloud-actions">'
+        + '<button onclick="loadFromSheet(\'' + item.id + '\')">불러오기</button>'
+        + '<button class="btn-del" onclick="deleteFromSheet(\'' + item.id + '\')">삭제</button>'
+        + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('cloudModalBody').innerHTML = html;
+  } catch (err) {
+    document.getElementById('cloudModalBody').innerHTML = '<div class="cloud-empty">오류: ' + err.message + '</div>';
+  }
+}
+
+async function loadFromSheet(id) {
+  try {
+    document.getElementById('cloudModalBody').innerHTML = '<div class="cloud-loading">불러오는 중...</div>';
+    var result = await callScript('action=load&id=' + encodeURIComponent(id));
+    if (!result.success || !result.data) {
+      alert('불러오기 실패: ' + (result.error || '데이터가 없습니다'));
+      loadCloudList();
+      return;
+    }
+    var data = result.data;
+
+    // 서비스 유형 먼저 복원
+    var typeEl = document.getElementById('serviceType');
+    if (typeEl && data.form && data.form.serviceType) typeEl.value = data.form.serviceType;
+    renderQuoteForm(typeEl ? typeEl.value : 'dogup');
+
+    // 필드 복원
+    if (data.form) {
+      Object.keys(data.form).forEach(function(key) {
+        if (key === 'serviceType') return;
+        if (key === 'csCustomMode' || key === 'showRef') {
+          var el = document.getElementById(key);
+          if (el) el.checked = data.form[key] === true || data.form[key] === 'true';
+          return;
+        }
+        var el = document.getElementById(key);
+        if (el) el.value = data.form[key] || '';
+      });
+
+      var customEl = document.getElementById('csCustomMode');
+      if (customEl) {
+        var fields = document.getElementById('csCustomFields');
+        var tierSelect = document.getElementById('csCallTier');
+        if (fields) fields.style.display = customEl.checked ? 'block' : 'none';
+        if (tierSelect) tierSelect.disabled = customEl.checked;
+      }
+    }
+
+    // 레퍼런스 복원
+    if (data.refs && data.refs.length > 0) {
+      var list = document.getElementById('refList');
+      list.innerHTML = '';
+      data.refs.forEach(function(r) {
+        var row = document.createElement('div');
+        row.className = 'ref-row';
+        row.innerHTML = '<input type="text" placeholder="업체명" class="ref-company" data-save value="' + escHtml(r.company||'') + '">'
+          + '<input type="text" placeholder="업종" class="ref-industry" data-save value="' + escHtml(r.industry||'') + '">'
+          + '<input type="text" placeholder="인원" class="ref-count" data-save style="width:70px;flex:none;" value="' + escHtml(r.count||'') + '">'
+          + '<input type="text" placeholder="기간" class="ref-period" data-save value="' + escHtml(r.period||'') + '">'
+          + '<button class="btn-remove" onclick="removeRef(this)" title="삭제">&times;</button>';
+        list.appendChild(row);
+      });
+    }
+
+    currentCloudId = id;
+    onServiceTypeChange();
+    bindInputListeners();
+    updatePreview();
+    saveData();
+    closeCloudModal();
+    alert('불러오기 완료: ' + (data.form ? data.form.clientName || '제안서' : '제안서'));
+  } catch (err) {
+    alert('오류: ' + err.message);
+    loadCloudList();
+  }
+}
+
+async function deleteFromSheet(id) {
+  if (!confirm('이 제안서를 클라우드에서 삭제하시겠습니까?')) return;
+  try {
+    var result = await callScript('action=delete&id=' + encodeURIComponent(id));
+    if (result.success) {
+      loadCloudList();
+    } else {
+      alert('삭제 실패: ' + (result.error || ''));
+    }
+  } catch (err) {
+    alert('오류: ' + err.message);
+  }
+}
+
+// ===== Print =====
+function printProposal() {
+  window.print();
+}
+
+// ===== Input Listeners =====
+function bindInputListeners() {
+  document.querySelectorAll('[data-save]').forEach(el => {
+    el.removeEventListener('input', onInput);
+    el.addEventListener('input', onInput);
+  });
+}
+function onInput() {
+  updatePreview();
+  saveData();
+}
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', function() {
+  if (!document.getElementById('proposalDate').value) {
+    document.getElementById('proposalDate').value = new Date().toISOString().split('T')[0];
+  }
+  // 견적 폼 초기 렌더링 (loadData 전)
+  renderQuoteForm(document.getElementById('serviceType').value);
+  loadData();
+  bindInputListeners();
+  onServiceTypeChange();
+  updatePreview();
+  // 저장자 필드 변경 시 localStorage 저장
+  const savedByEl = document.getElementById('savedBy');
+  if (savedByEl) savedByEl.addEventListener('input', saveData);
+});
+</script>
+
+<!-- Cloud Modal -->
+<div class="cloud-overlay" id="cloudOverlay" onclick="if(event.target===this)closeCloudModal()">
+  <div class="cloud-modal">
+    <div class="cloud-modal-header">
+      <h3>&#x2601; 저장된 제안서 목록</h3>
+      <button class="btn-remove" onclick="closeCloudModal()" style="font-size:1.2rem;">&times;</button>
+    </div>
+    <div class="cloud-modal-body" id="cloudModalBody">
+      <div class="cloud-loading">불러오는 중...</div>
+    </div>
+    <div class="cloud-modal-footer">
+      <button class="btn btn-outline" onclick="closeCloudModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
